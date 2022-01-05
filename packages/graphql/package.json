@@ -1,0 +1,27 @@
+{
+  "name": "omg-graphql",
+  "version": "0.0.0",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "license": "MIT",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@babel/preset-typescript": "^7.16.7",
+    "@types/jest": "^27.4.0",
+    "config": "*",
+    "jest": "^27.4.5",
+    "ts-jest": "^27.1.2",
+    "tsconfig": "*",
+    "typescript": "^4.5.3"
+  },
+  "jest": {
+    "preset": "ts-jest"
+  },
+  "dependencies": {
+    "ajv": "^8.8.2",
+    "graphql": "^16.2.0",
+    "openmetagraph": "*"
+  }
+}

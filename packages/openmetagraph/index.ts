@@ -24,6 +24,7 @@ export type OpenMetaGraphNodeElement = {
 };
 
 export interface OpenMetaGraphSchema {
+  object: "schema";
   version: string;
   elements: {
     [key: string]:
@@ -39,6 +40,9 @@ export interface OpenMetaGraphSchema {
         }
       | {
           object: "node";
+
+          // Schemas this node should care about within this node
+          schemas: string[];
         };
   };
 }
@@ -50,12 +54,15 @@ export type OpenMetaGraphElement =
   | OpenMetaGraphNodeElement;
 
 export interface OpenMetaGraph {
+  object: "omg";
   version: "0.1.0";
-  //   formats: string[];
+  schemas: string[];
   elements: OpenMetaGraphElement[];
 }
 
-export type Fetcher = (key: string) => Promise<OpenMetaGraph>;
+export type Fetcher = (
+  key: string
+) => Promise<OpenMetaGraph | OpenMetaGraphSchema>;
 
 interface Checker {
   asNode: () => Node;
@@ -110,6 +117,9 @@ class Node {
 
   private async resolve(el: OpenMetaGraphNodeElement): Promise<Node> {
     const result = await this.fetcher(el.uri);
+    if (result.object !== "omg") {
+      throw new Error(`Got an unexpected result from ${el.uri}`);
+    }
     return new Node(result, this.fetcher);
   }
 
@@ -142,6 +152,9 @@ class Node {
 
 export default async function omg(key: string, fetcher: Fetcher) {
   const result = await fetcher(key);
+  if (result.object !== "omg") {
+    throw new Error(`Got an unexpected result from ${key}`);
+  }
 
   return new Node(result, fetcher);
 }

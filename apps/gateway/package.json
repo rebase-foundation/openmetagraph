@@ -1,0 +1,11 @@
+{
+  "name": "omg-gateway",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Evan Conrad",
+  "license": "MIT",
+  "dependencies": {
+    "graphql": "^16.2.0",
+    "openmetagraph": "*"
+  }
+}

@@ -3,7 +3,9 @@ import omg, { OpenMetaGraph } from "./index";
 test("Can filter for some things", async () => {
   const fetcher = async (uri: string): Promise<OpenMetaGraph> => {
     return {
+      object: "omg",
       version: "0.1.0",
+      schemas: [],
       elements: [
         {
           object: "string",
@@ -43,6 +45,8 @@ test("Can fetch a URI", async () => {
   const fetcher = async (uri: string): Promise<OpenMetaGraph> => {
     if (uri === "ipfs://inner") {
       return {
+        object: "omg",
+        schemas: [],
         version: "0.1.0",
         elements: [
           {
@@ -55,6 +59,8 @@ test("Can fetch a URI", async () => {
     }
 
     return {
+      object: "omg",
+      schemas: [],
       version: "0.1.0",
       elements: [
         {
