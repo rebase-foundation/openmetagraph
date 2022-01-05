@@ -57,18 +57,6 @@ export interface OpenMetaGraph {
 
 export type Fetcher = (key: string) => Promise<OpenMetaGraph>;
 
-function isFileElement(
-  el: OpenMetaGraphElement
-): el is OpenMetaGraphFileElement {
-  return el.object === "file";
-}
-
-function isValueElement(
-  el: OpenMetaGraphElement
-): el is OpenMetaGraphStringElement {
-  return !!(el as OpenMetaGraphStringElement).value;
-}
-
 interface Checker {
   asNode: () => Node;
   asStringElement: () => OpenMetaGraphStringElement;
