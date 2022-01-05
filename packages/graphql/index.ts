@@ -1,6 +1,5 @@
 import { Fetcher, OpenMetaGraph, OpenMetaGraphSchema } from "openmetagraph";
 import {
-  graphql,
   GraphQLSchema,
   GraphQLString,
   GraphQLObjectType,

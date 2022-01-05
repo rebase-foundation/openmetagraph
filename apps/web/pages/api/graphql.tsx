@@ -1,12 +1,14 @@
-import { OpenMetaGraph, OpenMetaGraphSchema } from "openmetagraph";
+import { NextApiRequest, NextApiResponse } from "next";
 import { getGraphQLParams } from "express-graphql";
-import express, { response } from "express";
+import { OpenMetaGraph, OpenMetaGraphSchema } from "openmetagraph";
 import { execute, parse, Source } from "graphql";
 import { buildGraphqlSchema } from "omg-graphql";
 import fetch from "node-fetch";
 
-const app = express();
-app.use("/graphql", async (req, res) => {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   let schemas = req.headers["x-omg-schemas"];
   if (!schemas) {
     return res.status(400).send("Missing 'x-omg-schemas' header");
@@ -34,7 +36,7 @@ app.use("/graphql", async (req, res) => {
 
   const schema = await buildGraphqlSchema(schemas as string[], fetcher);
 
-  const params = await getGraphQLParams(req);
+  const params = await getGraphQLParams(req as any);
   const { query, variables, operationName } = params;
   if (!query) return res.status(400).send("Expected a 'query' parameter");
 
@@ -42,7 +44,9 @@ app.use("/graphql", async (req, res) => {
   const result = await execute({
     schema,
     document,
+    variableValues: variables,
+    operationName,
   });
 
   return res.json(result);
-});
+}

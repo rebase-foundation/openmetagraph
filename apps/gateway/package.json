@@ -4,6 +4,9 @@
   "main": "index.js",
   "author": "Evan Conrad",
   "license": "MIT",
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {
     "express": "^4.17.2",
     "express-graphql": "^0.12.0",
