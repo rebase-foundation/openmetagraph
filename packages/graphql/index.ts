@@ -1,4 +1,4 @@
-import omg, { Fetcher, OpenMetaGraphSchema } from "openmetagraph";
+import { Fetcher, OpenMetaGraph, OpenMetaGraphSchema } from "openmetagraph";
 import {
   graphql,
   GraphQLSchema,
@@ -7,8 +7,6 @@ import {
   GraphQLObjectTypeConfig,
   GraphQLOutputType,
   GraphQLFloat,
-  execute,
-  parse,
 } from "graphql";
 
 async function buildGraphqlSchemaFields(
@@ -66,9 +64,28 @@ async function buildGraphqlSchemaFields(
 
     fields[key] = {
       type: type as any,
-      resolve: (source, args, context) => {
-        console.log(source, args, context);
-        return {};
+      resolve: async (source, args, context: OpenMetaGraph) => {
+        const result = context.elements.find((k) => k.key === key);
+        if (!result) throw new Error(`${key} does not exist.`);
+
+        if (result.object === "number" || result.object === "string") {
+          return result.value;
+        }
+
+        if (result.object === "file") {
+          return {
+            contentType: result.contentType,
+            uri: result.uri,
+          };
+        }
+
+        const doc = await fetcher(result.uri);
+        if (doc.object !== "omg") {
+          throw new Error(
+            `${key} did not resolve to an OMG document at '${result.uri}'`
+          );
+        }
+        return doc;
       },
     };
   }
@@ -99,8 +116,23 @@ export async function example() {
     },
   };
 
-  const schema = await buildGraphqlSchema(omgschema, async () => {
-    return {} as any;
+  const schema = await buildGraphqlSchema(omgschema, async (uri: string) => {
+    if (uri == "schema") {
+      return omgschema;
+    }
+
+    return {
+      object: "omg",
+      version: "0.1.0",
+      schemas: ["schema"],
+      elements: [
+        {
+          key: "title",
+          object: "string",
+          value: "hello world",
+        },
+      ],
+    };
   });
 
   const query = `
@@ -113,7 +145,16 @@ export async function example() {
     schema: schema,
     source: "{ title }",
     contextValue: {
-      data: "anything",
+      object: "omg",
+      version: "0.1.0",
+      schemas: ["schema"],
+      elements: [
+        {
+          key: "title",
+          object: "string",
+          value: "hello world",
+        },
+      ],
     },
   });
 
