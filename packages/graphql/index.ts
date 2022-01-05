@@ -8,6 +8,30 @@ import {
   GraphQLOutputType,
   GraphQLFloat,
 } from "graphql";
+import crypto from "crypto";
+
+export const FileType = new GraphQLObjectType({
+  name: "File",
+  description: "A URI to a file somewhere else",
+  fields: {
+    contentType: {
+      type: GraphQLString,
+      description: "A mime type, like 'image/gif'",
+    },
+    uri: {
+      type: GraphQLString,
+      description: "A URI, like ipfs://mycid, or https://example.com/foo.gif",
+    },
+  },
+});
+
+function createTypeName(schemas: string[]) {
+  const hash = crypto.createHash("md5");
+  for (let schema of schemas) {
+    hash.update(schema);
+  }
+  return hash.digest("hex");
+}
 
 async function buildGraphqlSchemaFields(
   omgSchema: OpenMetaGraphSchema,
@@ -22,21 +46,7 @@ async function buildGraphqlSchemaFields(
     } else if (el.object === "number") {
       type = GraphQLFloat;
     } else if (el.object === "file") {
-      type = new GraphQLObjectType({
-        name: "File",
-        description: "A URI to a file somewhere else",
-        fields: {
-          contentType: {
-            type: GraphQLString,
-            description: "A mime type, like 'image/gif'",
-          },
-          uri: {
-            type: GraphQLString,
-            description:
-              "A URI, like ipfs://mycid, or https://example.com/foo.gif",
-          },
-        },
-      });
+      type = FileType;
     } else if (el.object === "node") {
       let innerFields = {};
       for (let schema of el.schemas) {
@@ -51,7 +61,7 @@ async function buildGraphqlSchemaFields(
         );
       }
       type = new GraphQLObjectType({
-        name: "Node",
+        name: "Node_" + createTypeName(el.schemas),
         fields: innerFields,
       });
     } else {
@@ -65,10 +75,13 @@ async function buildGraphqlSchemaFields(
     fields[key] = {
       type: type as any,
       resolve: async (source: OpenMetaGraph) => {
+        console.log("source", source);
         const result = source.elements.find((k) => k.key === key);
+        console.log("found element", result);
         if (!result) throw new Error(`${key} does not exist.`);
 
         if (result.object === "number" || result.object === "string") {
+          console.log("found string", result);
           return result.value;
         }
 
@@ -79,7 +92,10 @@ async function buildGraphqlSchemaFields(
           };
         }
 
+        console.log("omg res", result);
+
         const doc = await fetcher(result.uri);
+        console.log("doc", doc);
         if (doc.object !== "omg") {
           throw new Error(
             `${key} did not resolve to an OMG document at '${result.uri}'`
@@ -110,7 +126,7 @@ export async function buildGraphqlSchema(
     );
   }
   const NodeType = new GraphQLObjectType({
-    name: "Node",
+    name: "Node_" + createTypeName(omgSchemas),
     fields: innerFields,
   });
 
@@ -127,56 +143,11 @@ export async function buildGraphqlSchema(
           },
           resolve: async (src, { key }, ctx) => {
             const result = await fetcher(key);
+            console.log("resolve", result);
             return result;
           },
         },
       },
     }),
   });
-}
-
-export async function example() {
-  const omgschema: OpenMetaGraphSchema = {
-    object: "schema",
-    version: "0.1.0",
-    elements: {
-      title: {
-        object: "string",
-      },
-    },
-  };
-
-  const schema = await buildGraphqlSchema(["schema"], async (uri: string) => {
-    if (uri == "schema") {
-      return omgschema;
-    }
-
-    return {
-      object: "omg",
-      version: "0.1.0",
-      schemas: ["schema"],
-      elements: [
-        {
-          key: "title",
-          object: "string",
-          value: "hello world",
-        },
-      ],
-    };
-  });
-
-  const query = `
-  {
-    get(key: "ipfs://cid") {
-      title
-    }
-  }
-  `;
-
-  const result = await graphql({
-    schema: schema,
-    source: query,
-  });
-
-  return result;
 }
