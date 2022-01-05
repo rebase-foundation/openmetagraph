@@ -1,5 +1,5 @@
 import { example } from "./index";
 
 test("boop", async () => {
-  expect(await example()).toEqual({ data: { hello: "hello world" } });
+  expect(await example()).toEqual({ data: { get: { title: "hello world" } } });
 });

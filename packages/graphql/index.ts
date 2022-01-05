@@ -64,8 +64,8 @@ async function buildGraphqlSchemaFields(
 
     fields[key] = {
       type: type as any,
-      resolve: async (source, args, context: OpenMetaGraph) => {
-        const result = context.elements.find((k) => k.key === key);
+      resolve: async (source: OpenMetaGraph) => {
+        const result = source.elements.find((k) => k.key === key);
         if (!result) throw new Error(`${key} does not exist.`);
 
         if (result.object === "number" || result.object === "string") {
@@ -94,13 +94,43 @@ async function buildGraphqlSchemaFields(
 }
 
 export async function buildGraphqlSchema(
-  omgSchema: OpenMetaGraphSchema,
+  omgSchemas: string[],
   fetcher: Fetcher
 ) {
+  let innerFields = {};
+  for (let schema of omgSchemas) {
+    const result = await fetcher(schema);
+    if (result.object !== "schema") {
+      throw new Error(`Resource at ${schema} does not look like a schema.`);
+    }
+    innerFields = Object.assign(
+      {},
+      innerFields,
+      await buildGraphqlSchemaFields(result, fetcher)
+    );
+  }
+  const NodeType = new GraphQLObjectType({
+    name: "Node",
+    fields: innerFields,
+  });
+
   return new GraphQLSchema({
     query: new GraphQLObjectType({
-      name: "Node",
-      fields: await buildGraphqlSchemaFields(omgSchema, fetcher),
+      name: "Query",
+      fields: {
+        get: {
+          type: NodeType,
+          args: {
+            key: {
+              type: GraphQLString,
+            },
+          },
+          resolve: async (src, { key }, ctx) => {
+            const result = await fetcher(key);
+            return result;
+          },
+        },
+      },
     }),
   });
 }
@@ -116,7 +146,7 @@ export async function example() {
     },
   };
 
-  const schema = await buildGraphqlSchema(omgschema, async (uri: string) => {
+  const schema = await buildGraphqlSchema(["schema"], async (uri: string) => {
     if (uri == "schema") {
       return omgschema;
     }
@@ -137,25 +167,15 @@ export async function example() {
 
   const query = `
   {
-    title
+    get(key: "ipfs://cid") {
+      title
+    }
   }
   `;
 
   const result = await graphql({
     schema: schema,
-    source: "{ title }",
-    contextValue: {
-      object: "omg",
-      version: "0.1.0",
-      schemas: ["schema"],
-      elements: [
-        {
-          key: "title",
-          object: "string",
-          value: "hello world",
-        },
-      ],
-    },
+    source: query,
   });
 
   return result;
