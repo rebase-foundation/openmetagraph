@@ -1,18 +1,53 @@
-export type OpenMetaGraphValueElement = {
+export type OpenMetaGraphStringElement = {
+  object: "string";
   key: string;
-  type: string;
   value: string;
 };
 
-export type OpenMetaGraphLinkedElement = {
+export type OpenMetaGraphNumberElement = {
+  object: "number";
   key: string;
-  type: string;
+  value: number;
+};
+
+export type OpenMetaGraphFileElement = {
+  object: "file";
+  key: string;
+  contentType: string;
   uri: string;
 };
 
+export type OpenMetaGraphNodeElement = {
+  object: "node";
+  key: string;
+  uri: string;
+};
+
+export interface OpenMetaGraphSchema {
+  version: string;
+  elements: {
+    [key: string]:
+      | {
+          object: "file";
+          types: string[];
+        }
+      | {
+          object: "string";
+        }
+      | {
+          object: "number";
+        }
+      | {
+          object: "node";
+        };
+  };
+}
+
 export type OpenMetaGraphElement =
-  | OpenMetaGraphValueElement
-  | OpenMetaGraphLinkedElement;
+  | OpenMetaGraphStringElement
+  | OpenMetaGraphNumberElement
+  | OpenMetaGraphFileElement
+  | OpenMetaGraphNodeElement;
 
 export interface OpenMetaGraph {
   version: "0.1.0";
@@ -22,24 +57,32 @@ export interface OpenMetaGraph {
 
 export type Fetcher = (key: string) => Promise<OpenMetaGraph>;
 
-function isLinkedElement(
+function isFileElement(
   el: OpenMetaGraphElement
-): el is OpenMetaGraphLinkedElement {
-  return !!(el as OpenMetaGraphLinkedElement).uri;
+): el is OpenMetaGraphFileElement {
+  return el.object === "file";
 }
 
 function isValueElement(
   el: OpenMetaGraphElement
-): el is OpenMetaGraphValueElement {
-  return !!(el as OpenMetaGraphValueElement).value;
+): el is OpenMetaGraphStringElement {
+  return !!(el as OpenMetaGraphStringElement).value;
 }
 
 interface Checker {
   asNode: () => Node;
-  asElement: () => OpenMetaGraphValueElement;
+  asStringElement: () => OpenMetaGraphStringElement;
+  asNumberElement: () => OpenMetaGraphNumberElement;
+  asFileElement: () => OpenMetaGraphFileElement;
 }
 
-function check(e: Node | OpenMetaGraphValueElement): Checker {
+function check(
+  e:
+    | Node
+    | OpenMetaGraphNumberElement
+    | OpenMetaGraphStringElement
+    | OpenMetaGraphFileElement
+): Checker {
   return {
     asNode: () => {
       if (e instanceof Node) return e;
@@ -48,10 +91,23 @@ function check(e: Node | OpenMetaGraphValueElement): Checker {
           `.asNode(X) failed. X resolved to an element with the key: '${e.key}'`
         );
     },
-    asElement: () => {
+    asNumberElement: () => {
       if (e instanceof Node)
         throw new Error(`.asElement(X) failed. X resolved to a node.`);
-      else return e;
+      else if (e.object === "number") return e;
+      else throw new Error(`.asNumberElement(X) failed. X is a '${e.object}'`);
+    },
+    asFileElement: () => {
+      if (e instanceof Node)
+        throw new Error(`.asElement(X) failed. X resolved to a node.`);
+      else if (e.object === "file") return e;
+      else throw new Error(`.asNumberElement(X) failed. X is a '${e.object}'`);
+    },
+    asStringElement: () => {
+      if (e instanceof Node)
+        throw new Error(`.asElement(X) failed. X resolved to a node.`);
+      else if (e.object === "string") return e;
+      else throw new Error(`.asNumberElement(X) failed. X is a '${e.object}'`);
     },
   };
 }
@@ -64,7 +120,7 @@ class Node {
     this.fetcher = fetcher;
   }
 
-  private async resolve(el: OpenMetaGraphLinkedElement): Promise<Node> {
+  private async resolve(el: OpenMetaGraphNodeElement): Promise<Node> {
     const result = await this.fetcher(el.uri);
     return new Node(result, this.fetcher);
   }
@@ -73,7 +129,7 @@ class Node {
     const els = this.graph.elements
       .filter((e) => e.key === key)
       .map(async (e) => {
-        if (isLinkedElement(e)) {
+        if (e.object === "node") {
           return check(await this.resolve(e));
         } else {
           return check(e);

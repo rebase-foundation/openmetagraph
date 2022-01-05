@@ -6,18 +6,18 @@ test("Can filter for some things", async () => {
       version: "0.1.0",
       elements: [
         {
+          object: "string",
           key: "dog",
-          type: "plain/text",
           value: "spot",
         },
         {
+          object: "string",
           key: "dog",
-          type: "plain/text",
           value: "mop",
         },
         {
+          object: "string",
           key: "cat",
-          type: "plain/text",
           value: "winston",
         },
       ],
@@ -27,16 +27,16 @@ test("Can filter for some things", async () => {
   const root = await omg("ipfs://arglebargle", fetcher);
 
   const dogs = await Promise.all(root.find("dog"));
-  expect(dogs.map((e) => e.asElement().value)).toEqual(["spot", "mop"]);
+  expect(dogs.map((e) => e.asStringElement().value)).toEqual(["spot", "mop"]);
 
   const firstDog = await root.first("dog");
-  expect(firstDog?.asElement().value).toBe("spot");
+  expect(firstDog?.asStringElement().value).toBe("spot");
 
   const lastDog = await root.last("dog");
-  expect(lastDog?.asElement().value).toBe("mop");
+  expect(lastDog?.asStringElement().value).toBe("mop");
 
   const getCat = await root.first("cat");
-  expect(getCat?.asElement().value).toBe("winston");
+  expect(getCat?.asStringElement().value).toBe("winston");
 });
 
 test("Can fetch a URI", async () => {
@@ -46,8 +46,8 @@ test("Can fetch a URI", async () => {
         version: "0.1.0",
         elements: [
           {
+            object: "string",
             key: "data",
-            type: "plain/text",
             value: "value",
           },
         ],
@@ -58,13 +58,13 @@ test("Can fetch a URI", async () => {
       version: "0.1.0",
       elements: [
         {
+          object: "node",
           key: "inner",
-          type: "plain/text",
           uri: "ipfs://inner",
         },
         {
+          object: "string",
           key: "cat",
-          type: "plain/text",
           value: "winston",
         },
       ],
@@ -75,9 +75,9 @@ test("Can fetch a URI", async () => {
 
   const inner = await root.first("inner");
   const value = await inner?.asNode().first("data");
-  expect(value?.asElement()).toEqual({
+  expect(value?.asStringElement()).toEqual({
+    object: "string",
     key: "data",
-    type: "plain/text",
     value: "value",
   });
 });

@@ -18,5 +18,8 @@
   },
   "jest": {
     "preset": "ts-jest"
+  },
+  "dependencies": {
+    "ajv": "^8.8.2"
   }
 }
