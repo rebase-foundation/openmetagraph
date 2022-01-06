@@ -281,7 +281,6 @@ export async function buildGraphqlSchema(
           },
           resolve: async (src, { key }, ctx) => {
             const result = await hooks.onGetResource(key);
-            console.log("resolve", result);
             return result;
           },
         },
@@ -403,7 +402,6 @@ export async function buildGraphqlSchema(
               version: "0.1.0",
               elements: elements,
             });
-            console.log("resolve", result);
             return result;
           },
         },
