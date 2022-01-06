@@ -8,8 +8,11 @@ import {
   GraphQLFloat,
   GraphQLInputObjectType,
   GraphQLList,
+  GraphQLUnionType,
+  GraphQLError,
 } from "graphql";
 import crypto from "crypto";
+import GraphQLJSON from "graphql-type-json";
 
 export const FileType = new GraphQLObjectType({
   name: "File",
@@ -65,6 +68,99 @@ export const SchemaInputType = new GraphQLInputObjectType({
     },
     nodes: {
       type: new GraphQLList(NodeSchemaInput),
+    },
+  },
+});
+
+const StringElementType = new GraphQLInputObjectType({
+  name: "StringElementType",
+  fields: {
+    object: {
+      type: GraphQLString,
+    },
+    key: {
+      type: GraphQLString,
+    },
+    value: {
+      type: GraphQLString,
+    },
+  },
+});
+
+const NumberElementType = new GraphQLInputObjectType({
+  name: "NumberElementType",
+  fields: {
+    object: {
+      type: GraphQLString,
+    },
+    key: {
+      type: GraphQLString,
+    },
+    value: {
+      type: GraphQLFloat,
+    },
+  },
+});
+
+const FileElementType = new GraphQLInputObjectType({
+  name: "FileElementType",
+  fields: {
+    object: {
+      type: GraphQLString,
+    },
+    key: {
+      type: GraphQLString,
+    },
+    contentType: {
+      type: GraphQLString,
+    },
+    uri: {
+      type: GraphQLFloat,
+    },
+  },
+});
+
+const NodeElementType = new GraphQLInputObjectType({
+  name: "NodeElementType",
+  fields: {
+    object: {
+      type: GraphQLString,
+    },
+    key: {
+      type: GraphQLString,
+    },
+    uri: {
+      type: GraphQLFloat,
+    },
+  },
+});
+
+// const ElementType = new GraphQLUnionType({
+//   name: "Element",
+//   types: [
+//     NodeElementType,
+//     FileElementType,
+//     NumberElementType,
+//     StringElementType,
+//   ],
+//   resolveType: (value) => {
+//     if (value.object === "string") return "StringElementType";
+//     if (value.object === "number") return "NumberElementType";
+//     if (value.object === "file") return "FileElementType";
+//     if (value.object === "node") return "NodeElementType";
+//     throw new Error(`Unexpected object '${value.object}'`);
+//   },
+// });
+
+export const DocumentInputType = new GraphQLInputObjectType({
+  name: "DocumentInput",
+  description: "Input for creating a document",
+  fields: {
+    elements: {
+      type: new GraphQLList(GraphQLJSON),
+    },
+    schemas: {
+      type: new GraphQLList(GraphQLString),
     },
   },
 });
@@ -152,7 +248,7 @@ export async function buildGraphqlSchema(
   hooks: {
     onGetResource: Fetcher;
     onPostSchema: (schema: OpenMetaGraphSchema) => Promise<{ key: string }>;
-    onPostDocument: (schema: OpenMetaGraph) => Promise<any>;
+    onPostDocument: (doc: OpenMetaGraph) => Promise<{ key: string }>;
   }
 ) {
   let innerFields = {};
@@ -195,6 +291,49 @@ export async function buildGraphqlSchema(
       name: "Mutation",
 
       fields: {
+        createDocument: {
+          type: new GraphQLObjectType({
+            name: "CreateSchemaResponse",
+            fields: {
+              key: {
+                type: GraphQLString,
+              },
+            },
+          }),
+          args: {
+            document: {
+              type: DocumentInputType,
+            },
+          },
+          resolve: async (source, args, ctx) => {
+            const document = args.document;
+
+            document.elements.forEach((e: any) => {
+              if (!e) throw new GraphQLError("Empty elements are not allowed");
+              const obj = e.object;
+              if (
+                !(
+                  obj === "number" ||
+                  obj === "string" ||
+                  obj === "file" ||
+                  obj === "node"
+                )
+              ) {
+                return new GraphQLError(`Unexpected object '${e.object}'`);
+              }
+              return null;
+            });
+
+            const result = await hooks.onPostDocument({
+              object: "omg",
+              version: "0.1.0",
+              schemas: document.schemas,
+              elements: document.elements,
+            });
+            return result;
+          },
+        },
+
         createSchema: {
           type: new GraphQLObjectType({
             name: "CreateSchemaResponse",
