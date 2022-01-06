@@ -6,6 +6,8 @@ import {
   GraphQLObjectTypeConfig,
   GraphQLOutputType,
   GraphQLFloat,
+  GraphQLInputObjectType,
+  GraphQLList,
 } from "graphql";
 import crypto from "crypto";
 
@@ -20,6 +22,49 @@ export const FileType = new GraphQLObjectType({
     uri: {
       type: GraphQLString,
       description: "A URI, like ipfs://mycid, or https://example.com/foo.gif",
+    },
+  },
+});
+
+export const FileSchemaInput = new GraphQLInputObjectType({
+  name: "FileSchemaInput",
+  fields: {
+    key: {
+      type: GraphQLString,
+    },
+    types: {
+      type: new GraphQLList(GraphQLString),
+    },
+  },
+});
+
+export const NodeSchemaInput = new GraphQLInputObjectType({
+  name: "NodeSchemaInput",
+  fields: {
+    key: {
+      type: GraphQLString,
+    },
+    schemas: {
+      type: new GraphQLList(GraphQLString),
+    },
+  },
+});
+
+export const SchemaInputType = new GraphQLInputObjectType({
+  name: "SchemaInput",
+  description: "Input for creating a schema",
+  fields: {
+    files: {
+      type: new GraphQLList(FileSchemaInput),
+    },
+    strings: {
+      type: new GraphQLList(GraphQLString),
+    },
+    numbers: {
+      type: new GraphQLList(GraphQLString),
+    },
+    nodes: {
+      type: new GraphQLList(NodeSchemaInput),
     },
   },
 });
@@ -74,13 +119,10 @@ async function buildGraphqlSchemaFields(
     fields[key] = {
       type: type as any,
       resolve: async (source: OpenMetaGraph) => {
-        console.log("source", source);
         const result = source.elements.find((k) => k.key === key);
-        console.log("found element", result);
         if (!result) throw new Error(`${key} does not exist.`);
 
         if (result.object === "number" || result.object === "string") {
-          console.log("found string", result);
           return result.value;
         }
 
@@ -91,10 +133,7 @@ async function buildGraphqlSchemaFields(
           };
         }
 
-        console.log("omg res", result);
-
         const doc = await fetcher(result.uri);
-        console.log("doc", doc);
         if (doc.object !== "omg") {
           throw new Error(
             `${key} did not resolve to an OMG document at '${result.uri}'`
@@ -110,18 +149,22 @@ async function buildGraphqlSchemaFields(
 
 export async function buildGraphqlSchema(
   omgSchemas: string[],
-  fetcher: Fetcher
+  hooks: {
+    onGetResource: Fetcher;
+    onPostSchema: (schema: OpenMetaGraphSchema) => Promise<{ key: string }>;
+    onPostDocument: (schema: OpenMetaGraph) => Promise<any>;
+  }
 ) {
   let innerFields = {};
   for (let schema of omgSchemas) {
-    const result = await fetcher(schema);
+    const result = await hooks.onGetResource(schema);
     if (result.object !== "schema") {
       throw new Error(`Resource at ${schema} does not look like a schema.`);
     }
     innerFields = Object.assign(
       {},
       innerFields,
-      await buildGraphqlSchemaFields(result, fetcher)
+      await buildGraphqlSchemaFields(result, hooks.onGetResource)
     );
   }
   const NodeType = new GraphQLObjectType({
@@ -141,7 +184,86 @@ export async function buildGraphqlSchema(
             },
           },
           resolve: async (src, { key }, ctx) => {
-            const result = await fetcher(key);
+            const result = await hooks.onGetResource(key);
+            console.log("resolve", result);
+            return result;
+          },
+        },
+      },
+    }),
+    mutation: new GraphQLObjectType({
+      name: "Mutation",
+
+      fields: {
+        createSchema: {
+          type: new GraphQLObjectType({
+            name: "CreateSchemaResponse",
+            fields: {
+              key: {
+                type: GraphQLString,
+              },
+            },
+          }),
+          args: {
+            schema: {
+              type: SchemaInputType,
+            },
+          },
+          resolve: async (source, args, ctx) => {
+            const strings = args.schema.strings.reduce(
+              (s: object, key: string) => {
+                return {
+                  ...s,
+                  [key]: {
+                    object: "string",
+                  },
+                };
+              },
+              {}
+            );
+            const numbers = args.schema.numbers.reduce(
+              (s: object, key: string) => {
+                return {
+                  ...s,
+                  [key]: {
+                    object: "number",
+                  },
+                };
+              },
+              {}
+            );
+            const files = args.schema.files.reduce(
+              (s: object, value: { key: string; types: string[] }) => {
+                return {
+                  ...s,
+                  [value.key]: {
+                    object: "file",
+                    types: value.types,
+                  },
+                };
+              },
+              {}
+            );
+            const nodes = args.schema.nodes.reduce(
+              (s: object, value: { key: string; schemas: string[] }) => {
+                return {
+                  ...s,
+                  [value.key]: {
+                    object: "node",
+                    schemas: value.schemas,
+                  },
+                };
+              },
+              {}
+            );
+
+            const elements = Object.assign({}, strings, numbers, files, nodes);
+
+            const result = await hooks.onPostSchema({
+              object: "schema",
+              version: "0.1.0",
+              elements: elements,
+            });
             console.log("resolve", result);
             return result;
           },
