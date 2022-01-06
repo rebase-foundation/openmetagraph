@@ -12,7 +12,7 @@ import {
   GraphQLError,
 } from "graphql";
 import crypto from "crypto";
-import GraphQLJSON from "graphql-type-json";
+import GraphQLJSON, { GraphQLJSONObject } from "graphql-type-json";
 
 export const FileType = new GraphQLObjectType({
   name: "File",
@@ -277,24 +277,49 @@ export async function buildGraphqlSchema(
     fields: innerFields,
   });
 
-  return new GraphQLSchema({
-    query: new GraphQLObjectType({
-      name: "Query",
-      fields: {
-        get: {
-          type: NodeType,
-          args: {
-            key: {
-              type: GraphQLString,
+  const maybeQuery =
+    omgSchemas.length > 0
+      ? {
+          query: new GraphQLObjectType({
+            name: "Query",
+            fields: {
+              get: {
+                type: NodeType,
+                args: {
+                  key: {
+                    type: GraphQLString,
+                  },
+                },
+                resolve: async (src, { key }, ctx) => {
+                  const result = await hooks.onGetResource(key);
+                  return result;
+                },
+              },
             },
-          },
-          resolve: async (src, { key }, ctx) => {
-            const result = await hooks.onGetResource(key);
-            return result;
-          },
-        },
-      },
-    }),
+          }),
+        }
+      : {
+          query: new GraphQLObjectType({
+            name: "Query",
+            fields: {
+              get: {
+                type: GraphQLJSONObject,
+                args: {
+                  key: {
+                    type: GraphQLString,
+                  },
+                },
+                resolve: async (src, { key }, ctx) => {
+                  const result = await hooks.onGetResource(key);
+                  return result;
+                },
+              },
+            },
+          }),
+        };
+
+  return new GraphQLSchema({
+    ...maybeQuery,
     mutation: new GraphQLObjectType({
       name: "Mutation",
 

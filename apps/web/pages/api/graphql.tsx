@@ -72,7 +72,10 @@ export default async function handler(
     return res.json(result);
   } catch (err) {
     return res.json({
-      errors: [err],
+      errors: [
+        new GraphQLError("Something went wrong executing"),
+        new GraphQLError(err),
+      ],
     });
   }
 }
