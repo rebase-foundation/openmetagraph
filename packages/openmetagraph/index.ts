@@ -30,16 +30,20 @@ export interface OpenMetaGraphSchema {
     [key: string]:
       | {
           object: "file";
+          multiple: boolean;
           types: string[];
         }
       | {
           object: "string";
+          multiple: boolean;
         }
       | {
           object: "number";
+          multiple: boolean;
         }
       | {
           object: "node";
+          multiple: boolean;
 
           // Schemas this node should care about within this node
           schemas: string[];

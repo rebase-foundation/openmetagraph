@@ -1,4 +1,10 @@
-import { Fetcher, OpenMetaGraph, OpenMetaGraphSchema } from "openmetagraph";
+import {
+  Fetcher,
+  OpenMetaGraph,
+  OpenMetaGraphFileElement,
+  OpenMetaGraphNodeElement,
+  OpenMetaGraphSchema,
+} from "openmetagraph";
 import {
   GraphQLSchema,
   GraphQLString,
@@ -10,6 +16,7 @@ import {
   GraphQLList,
   GraphQLUnionType,
   GraphQLError,
+  GraphQLBoolean,
 } from "graphql";
 import crypto from "crypto";
 import GraphQLJSON, { GraphQLJSONObject } from "graphql-type-json";
@@ -29,6 +36,30 @@ export const FileType = new GraphQLObjectType({
   },
 });
 
+export const StringSchemaInput = new GraphQLInputObjectType({
+  name: "StringSchemaInput",
+  fields: {
+    key: {
+      type: GraphQLString,
+    },
+    multiple: {
+      type: GraphQLBoolean,
+    },
+  },
+});
+
+export const NumberSchemaInput = new GraphQLInputObjectType({
+  name: "NumberSchemaInput",
+  fields: {
+    key: {
+      type: GraphQLString,
+    },
+    multiple: {
+      type: GraphQLBoolean,
+    },
+  },
+});
+
 export const FileSchemaInput = new GraphQLInputObjectType({
   name: "FileSchemaInput",
   fields: {
@@ -37,6 +68,9 @@ export const FileSchemaInput = new GraphQLInputObjectType({
     },
     types: {
       type: new GraphQLList(GraphQLString),
+    },
+    multiple: {
+      type: GraphQLBoolean,
     },
   },
 });
@@ -50,6 +84,9 @@ export const NodeSchemaInput = new GraphQLInputObjectType({
     schemas: {
       type: new GraphQLList(GraphQLString),
     },
+    multiple: {
+      type: GraphQLBoolean,
+    },
   },
 });
 
@@ -61,10 +98,10 @@ export const SchemaInputType = new GraphQLInputObjectType({
       type: new GraphQLList(FileSchemaInput),
     },
     strings: {
-      type: new GraphQLList(GraphQLString),
+      type: new GraphQLList(StringSchemaInput),
     },
     numbers: {
-      type: new GraphQLList(GraphQLString),
+      type: new GraphQLList(NumberSchemaInput),
     },
     nodes: {
       type: new GraphQLList(NodeSchemaInput),
@@ -72,83 +109,66 @@ export const SchemaInputType = new GraphQLInputObjectType({
   },
 });
 
-const StringElementType = new GraphQLInputObjectType({
-  name: "StringElementType",
-  fields: {
-    object: {
-      type: GraphQLString,
-    },
-    key: {
-      type: GraphQLString,
-    },
-    value: {
-      type: GraphQLString,
-    },
-  },
-});
+// const StringElementType = new GraphQLInputObjectType({
+//   name: "StringElementType",
+//   fields: {
+//     object: {
+//       type: GraphQLString,
+//     },
+//     key: {
+//       type: GraphQLString,
+//     },
+//     value: {
+//       type: GraphQLString,
+//     },
+//   },
+// });
 
-const NumberElementType = new GraphQLInputObjectType({
-  name: "NumberElementType",
-  fields: {
-    object: {
-      type: GraphQLString,
-    },
-    key: {
-      type: GraphQLString,
-    },
-    value: {
-      type: GraphQLFloat,
-    },
-  },
-});
+// const NumberElementType = new GraphQLInputObjectType({
+//   name: "NumberElementType",
+//   fields: {
+//     object: {
+//       type: GraphQLString,
+//     },
+//     key: {
+//       type: GraphQLString,
+//     },
+//     value: {
+//       type: GraphQLFloat,
+//     },
+//   },
+// });
 
-const FileElementType = new GraphQLInputObjectType({
-  name: "FileElementType",
-  fields: {
-    object: {
-      type: GraphQLString,
-    },
-    key: {
-      type: GraphQLString,
-    },
-    contentType: {
-      type: GraphQLString,
-    },
-    uri: {
-      type: GraphQLFloat,
-    },
-  },
-});
+// const FileElementType = new GraphQLInputObjectType({
+//   name: "FileElementType",
+//   fields: {
+//     object: {
+//       type: GraphQLString,
+//     },
+//     key: {
+//       type: GraphQLString,
+//     },
+//     contentType: {
+//       type: GraphQLString,
+//     },
+//     uri: {
+//       type: GraphQLFloat,
+//     },
+//   },
+// });
 
-const NodeElementType = new GraphQLInputObjectType({
-  name: "NodeElementType",
-  fields: {
-    object: {
-      type: GraphQLString,
-    },
-    key: {
-      type: GraphQLString,
-    },
-    uri: {
-      type: GraphQLFloat,
-    },
-  },
-});
-
-// const ElementType = new GraphQLUnionType({
-//   name: "Element",
-//   types: [
-//     NodeElementType,
-//     FileElementType,
-//     NumberElementType,
-//     StringElementType,
-//   ],
-//   resolveType: (value) => {
-//     if (value.object === "string") return "StringElementType";
-//     if (value.object === "number") return "NumberElementType";
-//     if (value.object === "file") return "FileElementType";
-//     if (value.object === "node") return "NodeElementType";
-//     throw new Error(`Unexpected object '${value.object}'`);
+// const NodeElementType = new GraphQLInputObjectType({
+//   name: "NodeElementType",
+//   fields: {
+//     object: {
+//       type: GraphQLString,
+//     },
+//     key: {
+//       type: GraphQLString,
+//     },
+//     uri: {
+//       type: GraphQLFloat,
+//     },
 //   },
 // });
 
@@ -182,11 +202,23 @@ async function buildGraphqlSchemaFields(
     let el = omgSchema.elements[key];
     let type: GraphQLOutputType;
     if (el.object === "string") {
-      type = GraphQLString;
+      if (el.multiple) {
+        type = new GraphQLList(GraphQLString);
+      } else {
+        type = GraphQLString;
+      }
     } else if (el.object === "number") {
-      type = GraphQLFloat;
+      if (el.multiple) {
+        type = new GraphQLList(GraphQLFloat);
+      } else {
+        type = GraphQLFloat;
+      }
     } else if (el.object === "file") {
-      type = FileType;
+      if (el.multiple) {
+        type = new GraphQLList(FileType);
+      } else {
+        type = FileType;
+      }
     } else if (el.object === "node") {
       let innerFields = {};
       for (let schema of el.schemas) {
@@ -200,10 +232,16 @@ async function buildGraphqlSchemaFields(
           await buildGraphqlSchemaFields(result, fetcher)
         );
       }
-      type = new GraphQLObjectType({
+
+      let obj = new GraphQLObjectType({
         name: "Node_" + createTypeName(el.schemas),
         fields: innerFields,
       });
+      if (el.multiple) {
+        type = new GraphQLList(obj);
+      } else {
+        type = obj;
+      }
     } else {
       throw new Error(
         `Unexpected schema object type '${
@@ -215,27 +253,52 @@ async function buildGraphqlSchemaFields(
     fields[key] = {
       type: type as any,
       resolve: async (source: OpenMetaGraph) => {
-        const result = source.elements.find((k) => k.key === key);
-        if (!result) throw new Error(`${key} does not exist.`);
+        const multiple = omgSchema.elements[key].multiple;
+        const object = omgSchema.elements[key].object;
+        const data = source.elements.filter((k) => k.key === key);
 
-        if (result.object === "number" || result.object === "string") {
-          return result.value;
+        if (!data || (!multiple && data.length === 0))
+          throw new GraphQLError(`${key} does not exist.`);
+        if (multiple && data.length > 1)
+          throw new GraphQLError(
+            `${key} is marked as not multiple in the schema, yet the document contains ${data.length} instances`
+          );
+
+        if (object === "number" || object === "string") {
+          return multiple ? data : data[0];
         }
 
-        if (result.object === "file") {
-          return {
-            contentType: result.contentType,
-            uri: result.uri,
-          };
+        if (object === "file") {
+          if (!multiple) return data[0];
+          else {
+            data.map((d) => {
+              return {
+                contentType: (d as OpenMetaGraphFileElement).contentType,
+                uri: (d as OpenMetaGraphFileElement).uri,
+              };
+            });
+          }
         }
 
-        const doc = await fetcher(result.uri);
-        if (doc.object !== "omg") {
-          throw new Error(
-            `${key} did not resolve to an OMG document at '${result.uri}'`
+        async function resolveNode(result: OpenMetaGraphNodeElement) {
+          const doc = await fetcher(result.uri);
+          if (doc.object !== "omg") {
+            throw new Error(
+              `${key} did not resolve to an OMG document at '${result.uri}'`
+            );
+          }
+          return doc;
+        }
+
+        if (!multiple) {
+          return await resolveNode(data[0] as OpenMetaGraphNodeElement);
+        } else {
+          return await Promise.all(
+            data.map(async (d) => {
+              return await resolveNode(d as OpenMetaGraphNodeElement);
+            })
           );
         }
-        return doc;
       },
     };
   }
@@ -369,46 +432,56 @@ export async function buildGraphqlSchema(
           },
           resolve: async (source, args, ctx) => {
             const strings = args.schema.strings.reduce(
-              (s: object, key: string) => {
+              (s: object, value: { key: string; multiple: boolean }) => {
                 return {
                   ...s,
-                  [key]: {
+                  [value.key]: {
                     object: "string",
+                    multiple: value.multiple,
                   },
                 };
               },
               {}
             );
             const numbers = args.schema.numbers.reduce(
-              (s: object, key: string) => {
+              (s: object, value: { key: string; multiple: boolean }) => {
                 return {
                   ...s,
-                  [key]: {
+                  [value.key]: {
                     object: "number",
+                    multiple: value.multiple,
                   },
                 };
               },
               {}
             );
             const files = args.schema.files.reduce(
-              (s: object, value: { key: string; types: string[] }) => {
+              (
+                s: object,
+                value: { key: string; types: string[]; multiple: boolean }
+              ) => {
                 return {
                   ...s,
                   [value.key]: {
                     object: "file",
                     types: value.types,
+                    multiple: value.multiple,
                   },
                 };
               },
               {}
             );
             const nodes = args.schema.nodes.reduce(
-              (s: object, value: { key: string; schemas: string[] }) => {
+              (
+                s: object,
+                value: { key: string; schemas: string[]; multiple: boolean }
+              ) => {
                 return {
                   ...s,
                   [value.key]: {
                     object: "node",
                     schemas: value.schemas,
+                    multiple: value.multiple,
                   },
                 };
               },
