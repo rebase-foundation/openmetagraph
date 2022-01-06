@@ -24,8 +24,10 @@ export default async function handler(
   async function fetcher(
     key: string
   ): Promise<OpenMetaGraph | OpenMetaGraphSchema> {
-    let url = "https://ipfs.io/ipfs/" + key;
-    const result = await fetch(url);
+    let url = "https://ipfs.rebasefoundation.org/api/v0/cat?arg=" + key;
+    const result = await fetch(url, {
+      method: "POST",
+    });
     if (result.status !== 200) {
       throw new GraphQLError(
         `Unexpectedly failed to fetch '${url}' with status code ${
@@ -33,6 +35,7 @@ export default async function handler(
         } and body ${await result.text()}`
       );
     }
+
     const json = await result.json();
     return json as any;
   }

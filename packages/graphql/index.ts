@@ -19,7 +19,7 @@ import {
   GraphQLBoolean,
 } from "graphql";
 import crypto from "crypto";
-import GraphQLJSON, { GraphQLJSONObject } from "graphql-type-json";
+import { GraphQLJSONObject } from "graphql-type-json";
 
 export const FileType = new GraphQLObjectType({
   name: "File",
@@ -109,75 +109,12 @@ export const SchemaInputType = new GraphQLInputObjectType({
   },
 });
 
-// const StringElementType = new GraphQLInputObjectType({
-//   name: "StringElementType",
-//   fields: {
-//     object: {
-//       type: GraphQLString,
-//     },
-//     key: {
-//       type: GraphQLString,
-//     },
-//     value: {
-//       type: GraphQLString,
-//     },
-//   },
-// });
-
-// const NumberElementType = new GraphQLInputObjectType({
-//   name: "NumberElementType",
-//   fields: {
-//     object: {
-//       type: GraphQLString,
-//     },
-//     key: {
-//       type: GraphQLString,
-//     },
-//     value: {
-//       type: GraphQLFloat,
-//     },
-//   },
-// });
-
-// const FileElementType = new GraphQLInputObjectType({
-//   name: "FileElementType",
-//   fields: {
-//     object: {
-//       type: GraphQLString,
-//     },
-//     key: {
-//       type: GraphQLString,
-//     },
-//     contentType: {
-//       type: GraphQLString,
-//     },
-//     uri: {
-//       type: GraphQLFloat,
-//     },
-//   },
-// });
-
-// const NodeElementType = new GraphQLInputObjectType({
-//   name: "NodeElementType",
-//   fields: {
-//     object: {
-//       type: GraphQLString,
-//     },
-//     key: {
-//       type: GraphQLString,
-//     },
-//     uri: {
-//       type: GraphQLFloat,
-//     },
-//   },
-// });
-
 export const DocumentInputType = new GraphQLInputObjectType({
   name: "DocumentInput",
   description: "Input for creating a document",
   fields: {
     elements: {
-      type: new GraphQLList(GraphQLJSON),
+      type: new GraphQLList(GraphQLJSONObject),
     },
     schemas: {
       type: new GraphQLList(GraphQLString),
@@ -223,7 +160,7 @@ async function buildGraphqlSchemaFields(
       let innerFields = {};
       for (let schema of el.schemas) {
         const result = await fetcher(schema);
-        if (result.object !== "schema") {
+        if (!result || result.object !== "schema") {
           throw new Error(`Resource at ${schema} does not look like a schema.`);
         }
         innerFields = Object.assign(
@@ -390,7 +327,7 @@ export async function buildGraphqlSchema(
         createDocument: {
           type: CreateResponse,
           args: {
-            document: {
+            doc: {
               type: DocumentInputType,
             },
           },
