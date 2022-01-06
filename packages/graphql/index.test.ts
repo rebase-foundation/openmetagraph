@@ -13,7 +13,7 @@ test("Basic Example", async () => {
     },
   };
 
-  const schema = await buildGraphqlSchema(["schema"], async (uri: string) => {
+  const fetcher = async (uri: string): Promise<any> => {
     if (uri == "schema") {
       return omgschema;
     }
@@ -30,6 +30,16 @@ test("Basic Example", async () => {
         },
       ],
     };
+  };
+
+  const schema = await buildGraphqlSchema(["schema"], {
+    onGetResource: fetcher,
+    onPostDocument: async () => {
+      return { key: "key" } as any;
+    },
+    onPostSchema: async () => {
+      return { key: "key" } as any;
+    },
   });
 
   const query = `
@@ -74,49 +84,56 @@ test("Resolving a node", async () => {
     },
   };
 
-  const schema = await buildGraphqlSchema(
-    ["outerSchema"],
-    async (uri: string) => {
-      if (uri == "outerSchema") {
-        return outerSchema;
-      }
-      if (uri == "innerSchema") {
-        return innerSchema;
-      }
-
-      if (uri == "inner") {
-        return {
-          object: "omg",
-          version: "0.1.0",
-          schemas: ["innerSchema"],
-          elements: [
-            {
-              key: "data",
-              object: "string",
-              value: "inner",
-            },
-          ],
-        };
-      }
-
-      if (uri === "outer") {
-        return {
-          object: "omg",
-          version: "0.1.0",
-          schemas: ["outerSchema"],
-          elements: [
-            {
-              key: "inner",
-              object: "node",
-              uri: "inner",
-            },
-          ],
-        };
-      }
-
-      throw new Error(`Unexpected key '${uri}'`);
+  const fetcher = async (uri: string): Promise<any> => {
+    if (uri == "outerSchema") {
+      return outerSchema;
     }
-  );
+    if (uri == "innerSchema") {
+      return innerSchema;
+    }
+
+    if (uri == "inner") {
+      return {
+        object: "omg",
+        version: "0.1.0",
+        schemas: ["innerSchema"],
+        elements: [
+          {
+            key: "data",
+            object: "string",
+            value: "inner",
+          },
+        ],
+      };
+    }
+
+    if (uri === "outer") {
+      return {
+        object: "omg",
+        version: "0.1.0",
+        schemas: ["outerSchema"],
+        elements: [
+          {
+            key: "inner",
+            object: "node",
+            uri: "inner",
+          },
+        ],
+      };
+    }
+
+    throw new Error(`Unexpected key '${uri}'`);
+  };
+
+  const schema = await buildGraphqlSchema(["outerSchema"], {
+    onGetResource: fetcher,
+    onPostDocument: async () => {
+      return { key: "key" } as any;
+    },
+    onPostSchema: async () => {
+      return { key: "key" } as any;
+    },
+  });
 
   const query = `
   {

@@ -4,6 +4,7 @@ import { OpenMetaGraph, OpenMetaGraphSchema } from "openmetagraph";
 import { execute, GraphQLError, parse, Source } from "graphql";
 import { buildGraphqlSchema } from "omg-graphql";
 import fetch from "node-fetch";
+import * as IPFS from "ipfs-http-client";
 
 export default async function handler(
   req: NextApiRequest,
@@ -11,14 +12,14 @@ export default async function handler(
 ) {
   let schemas = req.headers["x-omg-schemas"];
   if (!schemas || schemas.length === 0) {
-    return res.json({
-      errors: [new GraphQLError("Missing 'x-omg-schemas' header")],
-    });
+    schemas = [];
   }
 
   if (!Array.isArray(schemas)) {
     schemas = [schemas];
   }
+
+  const ipfs = IPFS.create("https://ipfs.rebasefoundation.org/api/v0" as any);
 
   async function fetcher(
     key: string
@@ -36,7 +37,21 @@ export default async function handler(
     return json as any;
   }
 
-  const schema = await buildGraphqlSchema(schemas as string[], fetcher);
+  const schema = await buildGraphqlSchema(schemas as string[], {
+    onGetResource: fetcher,
+    onPostDocument: async (doc) => {
+      const result = await ipfs.add(JSON.stringify(doc));
+      return {
+        key: result.cid.toString(),
+      };
+    },
+    onPostSchema: async (doc) => {
+      const result = await ipfs.add(JSON.stringify(doc));
+      return {
+        key: result.cid.toString(),
+      };
+    },
+  });
 
   const params = await getGraphQLParams(req as any);
   const { query, variables, operationName } = params;

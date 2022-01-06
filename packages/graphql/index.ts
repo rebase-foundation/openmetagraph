@@ -243,6 +243,15 @@ async function buildGraphqlSchemaFields(
   return fields;
 }
 
+const CreateResponse = new GraphQLObjectType({
+  name: "CreateResponse",
+  fields: {
+    key: {
+      type: GraphQLString,
+    },
+  },
+});
+
 export async function buildGraphqlSchema(
   omgSchemas: string[],
   hooks: {
@@ -291,14 +300,7 @@ export async function buildGraphqlSchema(
 
       fields: {
         createDocument: {
-          type: new GraphQLObjectType({
-            name: "CreateSchemaResponse",
-            fields: {
-              key: {
-                type: GraphQLString,
-              },
-            },
-          }),
+          type: CreateResponse,
           args: {
             document: {
               type: DocumentInputType,
@@ -334,14 +336,7 @@ export async function buildGraphqlSchema(
         },
 
         createSchema: {
-          type: new GraphQLObjectType({
-            name: "CreateSchemaResponse",
-            fields: {
-              key: {
-                type: GraphQLString,
-              },
-            },
-          }),
+          type: CreateResponse,
           args: {
             schema: {
               type: SchemaInputType,
