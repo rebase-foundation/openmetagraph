@@ -9,6 +9,7 @@ test("Basic Example", async () => {
     elements: {
       title: {
         object: "string",
+        multiple: false,
       },
     },
   };
@@ -69,6 +70,7 @@ test("Resolving a node", async () => {
     elements: {
       data: {
         object: "string",
+        multiple: false,
       },
     },
   };
@@ -80,6 +82,7 @@ test("Resolving a node", async () => {
       inner: {
         object: "node",
         schemas: ["innerSchema"],
+        multiple: false,
       },
     },
   };
