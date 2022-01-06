@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getGraphQLParams } from "express-graphql";
 import { OpenMetaGraph, OpenMetaGraphSchema } from "openmetagraph";
-import { execute, parse, Source } from "graphql";
+import { execute, GraphQLError, parse, Source } from "graphql";
 import { buildGraphqlSchema } from "omg-graphql";
 import fetch from "node-fetch";
 
@@ -10,8 +10,10 @@ export default async function handler(
   res: NextApiResponse
 ) {
   let schemas = req.headers["x-omg-schemas"];
-  if (!schemas) {
-    return res.status(400).send("Missing 'x-omg-schemas' header");
+  if (!schemas || schemas.length === 0) {
+    return res.json({
+      errors: [new GraphQLError("Missing 'x-omg-schemas' header")],
+    });
   }
 
   if (!Array.isArray(schemas)) {
@@ -24,7 +26,7 @@ export default async function handler(
     let url = "https://ipfs.io/ipfs/" + key;
     const result = await fetch(url);
     if (result.status !== 200) {
-      throw new Error(
+      throw new GraphQLError(
         `Unexpectedly failed to fetch '${url}' with status code ${
           result.status
         } and body ${await result.text()}`
@@ -38,15 +40,24 @@ export default async function handler(
 
   const params = await getGraphQLParams(req as any);
   const { query, variables, operationName } = params;
-  if (!query) return res.status(400).send("Expected a 'query' parameter");
+  if (!query)
+    return res.status(200).json({
+      errors: ["Missing 'query' parameter"],
+    });
 
   const document = parse(new Source(query, "GraphQL request"));
-  const result = await execute({
-    schema,
-    document,
-    variableValues: variables,
-    operationName,
-  });
 
-  return res.json(result);
+  try {
+    const result = await execute({
+      schema,
+      document,
+      variableValues: variables,
+      operationName,
+    });
+    return res.json(result);
+  } catch (err) {
+    return res.json({
+      errors: [err],
+    });
+  }
 }
