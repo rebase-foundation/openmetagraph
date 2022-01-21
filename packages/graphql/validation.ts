@@ -1,3 +1,4 @@
+import { GraphQLError } from "graphql";
 import {
   object,
   number,
@@ -8,7 +9,17 @@ import {
   nonempty,
   record,
   boolean,
+  assert,
+  StructError,
 } from "superstruct";
+
+export const assertOrThrow = (value: any, struct: any) => {
+  try {
+    assert(value, struct);
+  } catch (err: any) {
+    throw new GraphQLError(err);
+  }
+};
 
 export const ValidStringElement = object({
   object: pattern(string(), /string/),

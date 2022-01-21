@@ -1,7 +1,7 @@
 import { GraphQLError } from "graphql";
 
-import { pick, assert, type } from "superstruct";
-import { ValidOpenMetaGraphDocument } from "./validation";
+import { pick, type } from "superstruct";
+import { assertOrThrow, ValidOpenMetaGraphDocument } from "./validation";
 import { CreateResponse, DocumentInputType } from "./fields";
 import { Hooks } from "./types";
 
@@ -15,7 +15,7 @@ export function buildCreateDocument(hooks: Hooks) {
     },
     resolve: async (source: any, args: any) => {
       const document = args.doc;
-      assert(
+      assertOrThrow(
         document,
         pick(ValidOpenMetaGraphDocument, ["schemas", "elements"])
       );

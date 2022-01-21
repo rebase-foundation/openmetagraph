@@ -17,8 +17,8 @@ import {
 } from "graphql";
 import crypto from "crypto";
 import { GraphQLJSONObject } from "graphql-type-json";
-import { assert } from "superstruct";
 import {
+  assertOrThrow,
   ValidOpenMetaGraphDocument,
   ValidOpenMetaGraphSchema,
 } from "./validation";
@@ -64,7 +64,7 @@ async function buildGraphqlSchemaFields(
       let innerFields = {};
       for (let schema of el.schemas) {
         const result = await fetcher(schema);
-        assert(result, ValidOpenMetaGraphSchema);
+        assertOrThrow(result, ValidOpenMetaGraphSchema);
         innerFields = Object.assign(
           {},
           innerFields,
@@ -123,7 +123,7 @@ async function buildGraphqlSchemaFields(
 
         async function resolveNode(result: OpenMetaGraphNodeElement) {
           const doc = await fetcher(result.uri);
-          assert(doc, ValidOpenMetaGraphDocument);
+          assertOrThrow(doc, ValidOpenMetaGraphDocument);
           return doc as OpenMetaGraph;
         }
 
@@ -147,7 +147,7 @@ export async function buildQuery(hooks: Hooks, omgSchemas: string[]) {
   let innerFields = {};
   for (let schema of omgSchemas) {
     const result = await hooks.onGetResource(schema);
-    assert(result, ValidOpenMetaGraphSchema);
+    assertOrThrow(result, ValidOpenMetaGraphSchema);
     innerFields = Object.assign(
       {},
       innerFields,
@@ -176,7 +176,7 @@ export async function buildQuery(hooks: Hooks, omgSchemas: string[]) {
           },
           resolve: async (src, { key }, ctx) => {
             const result = await hooks.onGetResource(key);
-            assert(result, ValidOpenMetaGraphDocument);
+            assertOrThrow(result, ValidOpenMetaGraphDocument);
             return result;
           },
         },
@@ -197,7 +197,7 @@ export async function buildQuery(hooks: Hooks, omgSchemas: string[]) {
           },
           resolve: async (src, { key }, ctx) => {
             const result = await hooks.onGetResource(key);
-            assert(result, ValidOpenMetaGraphDocument);
+            assertOrThrow(result, ValidOpenMetaGraphDocument);
             return result;
           },
         },
