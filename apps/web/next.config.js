@@ -1,6 +1,6 @@
 const withTM = require("next-transpile-modules")([
   "openmetagraph",
-  "omg-graphql",
+  "openmetagraph-graphql",
 ]);
 
 module.exports = withTM({

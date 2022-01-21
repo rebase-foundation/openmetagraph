@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { getGraphQLParams } from "express-graphql";
 import { OpenMetaGraph, OpenMetaGraphSchema } from "openmetagraph";
 import { execute, GraphQLError, parse, Source } from "graphql";
-import { buildGraphqlSchema } from "omg-graphql";
+import { buildGraphqlSchema } from "openmetagraph-graphql";
 import fetch from "node-fetch";
 import * as IPFS from "ipfs-http-client";
 
