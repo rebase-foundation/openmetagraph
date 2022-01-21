@@ -33,15 +33,18 @@ test("Basic Example", async () => {
     };
   };
 
-  const schema = await buildGraphqlSchema(["schema"], {
-    onGetResource: fetcher,
-    onPostDocument: async () => {
-      return { key: "key" } as any;
+  const schema = await buildGraphqlSchema(
+    {
+      onGetResource: fetcher,
+      onPostDocument: async () => {
+        return { key: "key" } as any;
+      },
+      onPostSchema: async () => {
+        return { key: "key" } as any;
+      },
     },
-    onPostSchema: async () => {
-      return { key: "key" } as any;
-    },
-  });
+    ["schema"]
+  );
 
   const query = `
   {
@@ -112,15 +115,18 @@ test("Multiple example", async () => {
     } as OpenMetaGraph;
   };
 
-  const schema = await buildGraphqlSchema(["schema"], {
-    onGetResource: fetcher,
-    onPostDocument: async () => {
-      return { key: "key" } as any;
+  const schema = await buildGraphqlSchema(
+    {
+      onGetResource: fetcher,
+      onPostDocument: async () => {
+        return { key: "key" } as any;
+      },
+      onPostSchema: async () => {
+        return { key: "key" } as any;
+      },
     },
-    onPostSchema: async () => {
-      return { key: "key" } as any;
-    },
-  });
+    ["schema"]
+  );
 
   const query = `
   {
@@ -222,15 +228,18 @@ test("Resolving a node", async () => {
     throw new Error(`Unexpected key '${uri}'`);
   };
 
-  const schema = await buildGraphqlSchema(["outerSchema"], {
-    onGetResource: fetcher,
-    onPostDocument: async () => {
-      return { key: "key" } as any;
+  const schema = await buildGraphqlSchema(
+    {
+      onGetResource: fetcher,
+      onPostDocument: async () => {
+        return { key: "key" } as any;
+      },
+      onPostSchema: async () => {
+        return { key: "key" } as any;
+      },
     },
-    onPostSchema: async () => {
-      return { key: "key" } as any;
-    },
-  });
+    ["outerSchema"]
+  );
 
   const query = `
   {

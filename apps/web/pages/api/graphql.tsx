@@ -40,21 +40,24 @@ export default async function handler(
     return json as any;
   }
 
-  const schema = await buildGraphqlSchema(schemas as string[], {
-    onGetResource: fetcher,
-    onPostDocument: async (doc) => {
-      const result = await ipfs.add(JSON.stringify(doc));
-      return {
-        key: result.cid.toString(),
-      };
+  const schema = await buildGraphqlSchema(
+    {
+      onGetResource: fetcher,
+      onPostDocument: async (doc) => {
+        const result = await ipfs.add(JSON.stringify(doc));
+        return {
+          key: result.cid.toString(),
+        };
+      },
+      onPostSchema: async (doc) => {
+        const result = await ipfs.add(JSON.stringify(doc));
+        return {
+          key: result.cid.toString(),
+        };
+      },
     },
-    onPostSchema: async (doc) => {
-      const result = await ipfs.add(JSON.stringify(doc));
-      return {
-        key: result.cid.toString(),
-      };
-    },
-  });
+    schemas as string[]
+  );
 
   const params = await getGraphQLParams(req as any);
   const { query, variables, operationName } = params;
