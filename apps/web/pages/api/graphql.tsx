@@ -10,7 +10,6 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  console.log("Open metagraph");
   let schemas = req.headers["x-omg-schemas"];
   if (!schemas || schemas.length === 0) {
     schemas = [];
