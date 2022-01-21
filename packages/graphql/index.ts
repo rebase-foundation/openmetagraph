@@ -4,6 +4,7 @@ import {
   OpenMetaGraphFileElement,
   OpenMetaGraphNodeElement,
   OpenMetaGraphSchema,
+  OpenMetaGraphStringElement,
 } from "openmetagraph";
 import {
   GraphQLSchema,
@@ -14,13 +15,12 @@ import {
   GraphQLFloat,
   GraphQLInputObjectType,
   GraphQLList,
-  GraphQLUnionType,
   GraphQLError,
   GraphQLBoolean,
 } from "graphql";
 import crypto from "crypto";
 import { GraphQLJSONObject } from "graphql-type-json";
-import { pick, assert } from "superstruct";
+import { pick, assert, type } from "superstruct";
 import {
   ValidOpenMetaGraphDocument,
   ValidOpenMetaGraphSchema,
@@ -200,19 +200,21 @@ async function buildGraphqlSchemaFields(
 
         if (!data || (!multiple && data.length === 0))
           throw new GraphQLError(`${key} does not exist.`);
-        if (multiple && data.length > 1)
+        if (!multiple && data.length > 1)
           throw new GraphQLError(
             `${key} is marked as not multiple in the schema, yet the document contains ${data.length} instances`
           );
 
         if (object === "number" || object === "string") {
-          return multiple ? data : data[0];
+          return multiple
+            ? data.map((d) => (d as OpenMetaGraphStringElement).value)
+            : (data[0] as OpenMetaGraphStringElement).value;
         }
 
         if (object === "file") {
           if (!multiple) return data[0];
           else {
-            data.map((d) => {
+            return data.map((d) => {
               return {
                 contentType: (d as OpenMetaGraphFileElement).contentType,
                 uri: (d as OpenMetaGraphFileElement).uri,
@@ -278,48 +280,50 @@ export async function buildGraphqlSchema(
     fields: innerFields,
   });
 
+  const queryWithSchema = {
+    query: new GraphQLObjectType({
+      name: "Query",
+      fields: {
+        get: {
+          type: NodeType,
+          args: {
+            key: {
+              type: GraphQLString,
+            },
+          },
+          resolve: async (src, { key }, ctx) => {
+            const result = await hooks.onGetResource(key);
+            assert(result, ValidOpenMetaGraphDocument);
+            return result;
+          },
+        },
+      },
+    }),
+  };
+
+  const queryWithoutSchema = {
+    query: new GraphQLObjectType({
+      name: "Query",
+      fields: {
+        get: {
+          type: GraphQLJSONObject,
+          args: {
+            key: {
+              type: GraphQLString,
+            },
+          },
+          resolve: async (src, { key }, ctx) => {
+            const result = await hooks.onGetResource(key);
+            assert(result, ValidOpenMetaGraphDocument);
+            return result;
+          },
+        },
+      },
+    }),
+  };
+
   const maybeQuery =
-    omgSchemas.length > 0
-      ? {
-          query: new GraphQLObjectType({
-            name: "Query",
-            fields: {
-              get: {
-                type: NodeType,
-                args: {
-                  key: {
-                    type: GraphQLString,
-                  },
-                },
-                resolve: async (src, { key }, ctx) => {
-                  const result = await hooks.onGetResource(key);
-                  assert(result, ValidOpenMetaGraphDocument);
-                  return result;
-                },
-              },
-            },
-          }),
-        }
-      : {
-          query: new GraphQLObjectType({
-            name: "Query",
-            fields: {
-              get: {
-                type: GraphQLJSONObject,
-                args: {
-                  key: {
-                    type: GraphQLString,
-                  },
-                },
-                resolve: async (src, { key }, ctx) => {
-                  const result = await hooks.onGetResource(key);
-                  assert(result, ValidOpenMetaGraphDocument);
-                  return result;
-                },
-              },
-            },
-          }),
-        };
+    omgSchemas.length > 0 ? queryWithSchema : queryWithoutSchema;
 
   return new GraphQLSchema({
     ...maybeQuery,

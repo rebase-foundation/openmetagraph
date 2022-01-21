@@ -1,5 +1,5 @@
 import { graphql } from "graphql";
-import { OpenMetaGraphSchema } from "openmetagraph";
+import { OpenMetaGraph, OpenMetaGraphSchema } from "openmetagraph";
 import { buildGraphqlSchema } from "./index";
 
 test("Basic Example", async () => {
@@ -56,9 +56,104 @@ test("Basic Example", async () => {
     source: query,
   });
 
+  expect(result.errors).toBeFalsy();
   expect(result.data).toEqual({
     get: {
       title: "hello world",
+    },
+  });
+});
+
+test("Multiple example", async () => {
+  const omgschema: OpenMetaGraphSchema = {
+    object: "schema",
+    version: "0.1.0",
+    elements: {
+      title: {
+        object: "string",
+        multiple: false,
+      },
+      photos: {
+        types: ["image/png"],
+        object: "file",
+        multiple: true,
+      },
+    },
+  };
+
+  const fetcher = async (uri: string): Promise<any> => {
+    if (uri == "schema") {
+      return omgschema;
+    }
+
+    return {
+      object: "omg",
+      version: "0.1.0",
+      schemas: ["schema"],
+      elements: [
+        {
+          key: "title",
+          object: "string",
+          value: "hello world",
+        },
+        {
+          key: "photos",
+          object: "file",
+          uri: "ipfs://my-photo",
+          contentType: "image/png",
+        },
+        {
+          key: "photos",
+          object: "file",
+          uri: "ipfs://another-photo",
+          contentType: "image/png",
+        },
+      ],
+    } as OpenMetaGraph;
+  };
+
+  const schema = await buildGraphqlSchema(["schema"], {
+    onGetResource: fetcher,
+    onPostDocument: async () => {
+      return { key: "key" } as any;
+    },
+    onPostSchema: async () => {
+      return { key: "key" } as any;
+    },
+  });
+
+  const query = `
+  {
+    get(key: "ipfs://cid") {
+      title
+      photos {
+        uri
+        contentType
+      }
+    }
+  }
+  `;
+
+  const result = await graphql({
+    schema: schema,
+    source: query,
+  });
+
+  expect(result.errors).toBeFalsy();
+
+  expect(result.data).toEqual({
+    get: {
+      title: "hello world",
+      photos: [
+        {
+          uri: "ipfs://my-photo",
+          contentType: "image/png",
+        },
+        {
+          uri: "ipfs://another-photo",
+          contentType: "image/png",
+        },
+      ],
     },
   });
 });
