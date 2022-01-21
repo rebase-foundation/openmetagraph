@@ -20,6 +20,11 @@ import {
 } from "graphql";
 import crypto from "crypto";
 import { GraphQLJSONObject } from "graphql-type-json";
+import { pick, assert } from "superstruct";
+import {
+  ValidOpenMetaGraphDocument,
+  ValidOpenMetaGraphSchema,
+} from "./validation";
 
 export const FileType = new GraphQLObjectType({
   name: "File",
@@ -135,6 +140,7 @@ async function buildGraphqlSchemaFields(
   fetcher: Fetcher
 ) {
   let fields: GraphQLObjectTypeConfig<any, any>["fields"] = {};
+
   for (let key in omgSchema.elements) {
     let el = omgSchema.elements[key];
     let type: GraphQLOutputType;
@@ -160,13 +166,11 @@ async function buildGraphqlSchemaFields(
       let innerFields = {};
       for (let schema of el.schemas) {
         const result = await fetcher(schema);
-        if (!result || result.object !== "schema") {
-          throw new Error(`Resource at ${schema} does not look like a schema.`);
-        }
+        assert(result, ValidOpenMetaGraphSchema);
         innerFields = Object.assign(
           {},
           innerFields,
-          await buildGraphqlSchemaFields(result, fetcher)
+          await buildGraphqlSchemaFields(result as OpenMetaGraphSchema, fetcher)
         );
       }
 
@@ -219,12 +223,8 @@ async function buildGraphqlSchemaFields(
 
         async function resolveNode(result: OpenMetaGraphNodeElement) {
           const doc = await fetcher(result.uri);
-          if (doc.object !== "omg") {
-            throw new Error(
-              `${key} did not resolve to an OMG document at '${result.uri}'`
-            );
-          }
-          return doc;
+          assert(doc, ValidOpenMetaGraphDocument);
+          return doc as OpenMetaGraph;
         }
 
         if (!multiple) {
@@ -263,13 +263,14 @@ export async function buildGraphqlSchema(
   let innerFields = {};
   for (let schema of omgSchemas) {
     const result = await hooks.onGetResource(schema);
-    if (result.object !== "schema") {
-      throw new Error(`Resource at ${schema} does not look like a schema.`);
-    }
+    assert(result, ValidOpenMetaGraphSchema);
     innerFields = Object.assign(
       {},
       innerFields,
-      await buildGraphqlSchemaFields(result, hooks.onGetResource)
+      await buildGraphqlSchemaFields(
+        result as OpenMetaGraphSchema,
+        hooks.onGetResource
+      )
     );
   }
   const NodeType = new GraphQLObjectType({
@@ -292,6 +293,7 @@ export async function buildGraphqlSchema(
                 },
                 resolve: async (src, { key }, ctx) => {
                   const result = await hooks.onGetResource(key);
+                  assert(result, ValidOpenMetaGraphDocument);
                   return result;
                 },
               },
@@ -311,6 +313,7 @@ export async function buildGraphqlSchema(
                 },
                 resolve: async (src, { key }, ctx) => {
                   const result = await hooks.onGetResource(key);
+                  assert(result, ValidOpenMetaGraphDocument);
                   return result;
                 },
               },
@@ -333,7 +336,10 @@ export async function buildGraphqlSchema(
           },
           resolve: async (source, args, ctx) => {
             const document = args.document;
-
+            assert(
+              document,
+              pick(ValidOpenMetaGraphDocument, ["schemas", "elements"])
+            );
             document.elements.forEach((e: any) => {
               if (!e) throw new GraphQLError("Empty elements are not allowed");
               const obj = e.object;
@@ -354,7 +360,7 @@ export async function buildGraphqlSchema(
               object: "omg",
               version: "0.1.0",
               schemas: document.schemas,
-              elements: document.elements,
+              elements: document.elements as any,
             });
             return result;
           },

@@ -1,5 +1,4 @@
 const withTM = require("next-transpile-modules")([
-  "ui",
   "openmetagraph",
   "omg-graphql",
 ]);
