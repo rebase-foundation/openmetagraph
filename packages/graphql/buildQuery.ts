@@ -7,7 +7,6 @@ import {
   OpenMetaGraphStringElement,
 } from "openmetagraph";
 import {
-  GraphQLSchema,
   GraphQLString,
   GraphQLObjectType,
   GraphQLObjectTypeConfig,
@@ -18,17 +17,12 @@ import {
 } from "graphql";
 import crypto from "crypto";
 import { GraphQLJSONObject } from "graphql-type-json";
-import { pick, assert, type } from "superstruct";
+import { assert } from "superstruct";
 import {
   ValidOpenMetaGraphDocument,
   ValidOpenMetaGraphSchema,
 } from "./validation";
-import {
-  CreateResponse,
-  DocumentInputType,
-  FileType,
-  SchemaInputType,
-} from "./fields";
+import { FileType } from "./fields";
 import { Hooks } from "./types";
 
 function createTypeName(schemas: string[]) {
