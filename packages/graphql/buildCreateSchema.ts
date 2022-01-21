@@ -1,5 +1,7 @@
+import { OpenMetaGraphSchema } from "openmetagraph";
 import { CreateResponse, SchemaInputType } from "./fields";
 import { Hooks } from "./types";
+import { assertOrThrow, ValidOpenMetaGraphSchema } from "./validation";
 
 export function buildCreateSchema(hooks: Hooks) {
   return {
@@ -69,11 +71,14 @@ export function buildCreateSchema(hooks: Hooks) {
 
       const elements = Object.assign({}, strings, numbers, files, nodes);
 
-      const result = await hooks.onPostSchema({
+      const openMetagraphSchema: OpenMetaGraphSchema = {
         object: "schema",
         version: "0.1.0",
         elements: elements,
-      });
+      };
+      assertOrThrow(openMetagraphSchema, ValidOpenMetaGraphSchema);
+
+      const result = await hooks.onPostSchema(openMetagraphSchema);
       return result;
     },
   };
