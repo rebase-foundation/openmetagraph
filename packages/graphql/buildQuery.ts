@@ -146,16 +146,20 @@ async function buildGraphqlSchemaFields(
 export async function buildQuery(hooks: Hooks, omgSchemas: string[]) {
   let innerFields = {};
   for (let schema of omgSchemas) {
-    const result = await hooks.onGetResource(schema);
-    assertOrThrow(result, ValidOpenMetaGraphSchema);
-    innerFields = Object.assign(
-      {},
-      innerFields,
-      await buildGraphqlSchemaFields(
-        result as OpenMetaGraphSchema,
-        hooks.onGetResource
-      )
-    );
+    try {
+      const result = await hooks.onGetResource(schema);
+      assertOrThrow(result, ValidOpenMetaGraphSchema);
+      innerFields = Object.assign(
+        {},
+        innerFields,
+        await buildGraphqlSchemaFields(
+          result as OpenMetaGraphSchema,
+          hooks.onGetResource
+        )
+      );
+    } catch (err) {
+      throw new Error(`Schema ${schema} is missing or invalid.\n\n${err}`);
+    }
   }
 
   const NodeType = new GraphQLObjectType({

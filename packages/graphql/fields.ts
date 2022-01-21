@@ -113,7 +113,6 @@ const ObjectType = new GraphQLScalarType({
         [ast]
       );
     }
-    console.log("what");
     return ast.fields;
   },
 });
