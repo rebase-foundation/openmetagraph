@@ -9,22 +9,25 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "graphql": "^16.2.0",
     "express-graphql": "0.12.0",
+    "graphql": "^16.2.0",
     "ipfs-http-client": "^55.0.0",
     "next": "12.0.7",
     "node-fetch": "^3.1.0",
-    "openmetagraph-graphql": "*",
     "openmetagraph": "*",
+    "openmetagraph-graphql": "*",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "ui": "*"
   },
   "devDependencies": {
     "@types/react": "17.0.37",
+    "autoprefixer": "^10.4.2",
     "config": "*",
     "eslint": "7.32.0",
     "next-transpile-modules": "9.0.0",
+    "postcss": "^8.4.5",
+    "tailwindcss": "^3.0.15",
     "tsconfig": "*",
     "typescript": "^4.5.3"
   }
