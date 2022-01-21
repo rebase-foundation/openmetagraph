@@ -1,4 +1,4 @@
-## Getting Started
+## Open Metagraph Web
 
 First, run the development server:
 
