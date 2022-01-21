@@ -4,6 +4,7 @@ import { buildQuery } from "./buildQuery";
 import { buildCreateDocument } from "./buildCreateDocument";
 import { buildCreateSchema } from "./buildCreateSchema";
 
+// Generates a graphql schema for open meta graph
 export async function buildGraphqlSchema(
   hooks: {
     onGetResource: Fetcher;

@@ -1,3 +1,4 @@
+import { Kind } from "graphql/language";
 import {
   GraphQLSchema,
   GraphQLString,
@@ -9,8 +10,9 @@ import {
   GraphQLList,
   GraphQLError,
   GraphQLBoolean,
+  GraphQLScalarType,
 } from "graphql";
-import { GraphQLJSONObject } from "graphql-type-json";
+import GraphQLJSON, { GraphQLJSONObject } from "graphql-type-json";
 
 export const FileType = new GraphQLObjectType({
   name: "File",
@@ -100,12 +102,28 @@ export const SchemaInputType = new GraphQLInputObjectType({
   },
 });
 
+const ObjectType = new GraphQLScalarType({
+  name: "ObjectType",
+  serialize: (value) => value,
+  parseValue: (value) => value,
+  parseLiteral: (ast) => {
+    if (ast.kind !== Kind.OBJECT) {
+      throw new GraphQLError(
+        `Query error: Can only parse object but got a: ${ast.kind}`,
+        [ast]
+      );
+    }
+    console.log("what");
+    return ast.fields;
+  },
+});
+
 export const DocumentInputType = new GraphQLInputObjectType({
   name: "DocumentInput",
   description: "Input for creating a document",
   fields: {
     elements: {
-      type: new GraphQLList(GraphQLJSONObject),
+      type: new GraphQLList(ObjectType),
     },
     schemas: {
       type: new GraphQLList(GraphQLString),

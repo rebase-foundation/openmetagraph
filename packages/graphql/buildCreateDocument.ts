@@ -14,7 +14,7 @@ export function buildCreateDocument(hooks: Hooks) {
       },
     },
     resolve: async (source: any, args: any) => {
-      const document = args.document;
+      const document = args.doc;
       assert(
         document,
         pick(ValidOpenMetaGraphDocument, ["schemas", "elements"])

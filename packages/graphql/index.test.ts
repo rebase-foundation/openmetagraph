@@ -67,6 +67,149 @@ test("Basic Example", async () => {
   });
 });
 
+test("CreateDocument example", async () => {
+  const omgschema: OpenMetaGraphSchema = {
+    object: "schema",
+    version: "0.1.0",
+    elements: {
+      title: {
+        object: "string",
+        multiple: false,
+      },
+      photos: {
+        types: ["image/png"],
+        object: "file",
+        multiple: true,
+      },
+    },
+  };
+
+  const fetcher = async (uri: string): Promise<any> => {
+    if (uri == "schema") {
+      return omgschema;
+    }
+    throw new Error("Unexpected schema " + uri);
+  };
+
+  let postCalled = false;
+  const schema = await buildGraphqlSchema(
+    {
+      onGetResource: fetcher,
+      onPostDocument: async () => {
+        postCalled = true;
+        return { key: "doc" } as any;
+      },
+      onPostSchema: async () => {
+        return { key: "schema" } as any;
+      },
+    },
+    ["schema"]
+  );
+
+  const query = `
+    mutation createDocument($input:DocumentInput) {
+      createDocument(doc: $input) {
+        key
+      }
+    }
+  `;
+
+  const result = await graphql({
+    schema: schema,
+    source: query,
+    variableValues: {
+      input: {
+        elements: [
+          {
+            key: "title",
+            object: "string",
+            value: "hello world",
+          },
+        ],
+        schemas: ["schema"],
+      },
+    },
+  });
+
+  expect((result.data as any).createDocument.key).toBe("doc");
+  expect(result.errors).toBeFalsy();
+  expect(postCalled).toBeTruthy();
+});
+
+test("CreateDocument example", async () => {
+  const omgschema: OpenMetaGraphSchema = {
+    object: "schema",
+    version: "0.1.0",
+    elements: {
+      title: {
+        object: "string",
+        multiple: false,
+      },
+      photos: {
+        types: ["image/png"],
+        object: "file",
+        multiple: true,
+      },
+    },
+  };
+
+  const fetcher = async (uri: string): Promise<any> => {
+    if (uri == "schema") {
+      return omgschema;
+    }
+    throw new Error("Unexpected schema " + uri);
+  };
+
+  let postCalled = false;
+  const schema = await buildGraphqlSchema(
+    {
+      onGetResource: fetcher,
+      onPostDocument: async () => {
+        return { key: "doc" } as any;
+      },
+      onPostSchema: async () => {
+        postCalled = true;
+        return { key: "schema" } as any;
+      },
+    },
+    ["schema"]
+  );
+
+  const query = `
+  mutation createSchema($mySchema:SchemaInput) {
+    createSchema(schema: $mySchema) {
+      key
+    }
+  }
+  `;
+
+  const result = await graphql({
+    schema: schema,
+    source: query,
+    variableValues: {
+      mySchema: {
+        files: [],
+        strings: [
+          {
+            key: "title",
+            multiple: false,
+          },
+          {
+            key: "tag",
+            multiple: true,
+          },
+        ],
+        numbers: [],
+        nodes: [],
+      },
+    },
+  });
+
+  expect((result.data as any).createSchema.key).toBe("schema");
+  expect(result.errors).toBeFalsy();
+  expect(postCalled).toBeTruthy();
+});
+
 test("Multiple example", async () => {
   const omgschema: OpenMetaGraphSchema = {
     object: "schema",
