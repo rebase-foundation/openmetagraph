@@ -140,7 +140,6 @@ test("Multiple example", async () => {
   });
 
   expect(result.errors).toBeFalsy();
-
   expect(result.data).toEqual({
     get: {
       title: "hello world",
