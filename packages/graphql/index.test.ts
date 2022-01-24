@@ -125,6 +125,12 @@ test("CreateDocument example", async () => {
             object: "string",
             value: "hello world",
           },
+          {
+            key: "photos",
+            object: "file",
+            contentType: "img",
+            uri: "testuri"
+          },
         ],
         schemas: ["schema"],
       },
