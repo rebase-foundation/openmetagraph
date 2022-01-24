@@ -216,6 +216,142 @@ test("CreateDocument example", async () => {
   expect(postCalled).toBeTruthy();
 });
 
+test("CreateDocument missing element", async () => {
+  const omgschema: OpenMetaGraphSchema = {
+    object: "schema",
+    version: "0.1.0",
+    elements: {
+      title: {
+        object: "string",
+        multiple: false,
+      },
+      photos: {
+        types: ["image/png"],
+        object: "file",
+        multiple: true,
+      },
+    },
+  };
+
+  const fetcher = async (uri: string): Promise<any> => {
+    if (uri == "schema") {
+      return omgschema;
+    }
+    throw new Error("Unexpected schema " + uri);
+  };
+
+  let postCalled = false;
+  const schema = await buildGraphqlSchema(
+    {
+      onGetResource: fetcher,
+      onPostDocument: async () => {
+        postCalled = true;
+        return { key: "doc" } as any;
+      },
+      onPostSchema: async () => {
+        return { key: "schema" } as any;
+      },
+    },
+    ["schema"]
+  );
+
+  const query = `
+    mutation createDocument($input:DocumentInput) {
+      createDocument(doc: $input) {
+        key
+      }
+    }
+  `;
+
+  const result = await graphql({
+    schema: schema,
+    source: query,
+    variableValues: {
+      input: {
+        elements: [
+          {
+            key: "title",
+            object: "string",
+            value: "hello world",
+          }
+        ],
+        schemas: ["schema"],
+      },
+    },
+  });
+
+  expect(result.errors).toBeTruthy();
+  expect(postCalled).toBeFalsy();
+});
+
+test("CreateDocument duplicate element", async () => {
+  const omgschema: OpenMetaGraphSchema = {
+    object: "schema",
+    version: "0.1.0",
+    elements: {
+      title: {
+        object: "string",
+        multiple: false,
+      }
+    },
+  };
+
+  const fetcher = async (uri: string): Promise<any> => {
+    if (uri == "schema") {
+      return omgschema;
+    }
+    throw new Error("Unexpected schema " + uri);
+  };
+
+  let postCalled = false;
+  const schema = await buildGraphqlSchema(
+    {
+      onGetResource: fetcher,
+      onPostDocument: async () => {
+        postCalled = true;
+        return { key: "doc" } as any;
+      },
+      onPostSchema: async () => {
+        return { key: "schema" } as any;
+      },
+    },
+    ["schema"]
+  );
+
+  const query = `
+    mutation createDocument($input:DocumentInput) {
+      createDocument(doc: $input) {
+        key
+      }
+    }
+  `;
+
+  const result = await graphql({
+    schema: schema,
+    source: query,
+    variableValues: {
+      input: {
+        elements: [
+          {
+            key: "title",
+            object: "string",
+            value: "hello world",
+          },
+          {
+            key: "title",
+            object: "string",
+            value: "hello worlds",
+          }
+        ],
+        schemas: ["schema"],
+      },
+    },
+  });
+
+  expect(result.errors).toBeTruthy();
+  expect(postCalled).toBeFalsy();
+});
+
 test("Multiple example", async () => {
   const omgschema: OpenMetaGraphSchema = {
     object: "schema",
