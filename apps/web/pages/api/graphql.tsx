@@ -18,13 +18,16 @@ export default async function handler(
   if (!Array.isArray(schemas)) {
     schemas = [schemas];
   }
+  schemas = schemas.map((s) => s.replace("ipfs://", ""));
 
   const ipfs = IPFS.create("https://ipfs.rebasefoundation.org/api/v0" as any);
 
   async function fetcher(
     key: string
   ): Promise<OpenMetaGraph | OpenMetaGraphSchema> {
-    let url = "https://ipfs.rebasefoundation.org/api/v0/cat?arg=" + key;
+    let k = key.replace("ipfs://", "");
+
+    let url = "https://ipfs.rebasefoundation.org/api/v0/cat?arg=" + k;
     const result = await fetch(url, {
       method: "POST",
     });
@@ -37,6 +40,7 @@ export default async function handler(
     }
 
     const json = await result.json();
+    console.log("key", json);
     return json as any;
   }
 
@@ -46,13 +50,13 @@ export default async function handler(
       onPostDocument: async (doc) => {
         const result = await ipfs.add(JSON.stringify(doc));
         return {
-          key: result.cid.toString(),
+          key: "ipfs://" + result.cid.toString(),
         };
       },
       onPostSchema: async (doc) => {
         const result = await ipfs.add(JSON.stringify(doc));
         return {
-          key: result.cid.toString(),
+          key: "ipfs://" + result.cid.toString(),
         };
       },
     },
