@@ -3601,15 +3601,10 @@ multiformats@^9.4.13, multiformats@^9.4.2, multiformats@^9.4.5, multiformats@^9.
   resolved "https://registry.yarnpkg.com/multiformats/-/multiformats-9.5.6.tgz#316c702117b21f5f53ed0f2857a117b361ae5af2"
   integrity sha512-FAM5VaBdBl9Ya+DssXsWgZ+Nao07RtFUc+w0IgEuyHrg1b1ms+QoMUw8h7rtKcLuaJwfYJdf3Ms1205nq+j+Zg==
 
-nanoid@^3.0.2, nanoid@^3.1.20, nanoid@^3.1.23:
-  version "3.1.30"
-  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.1.30.tgz#63f93cc548d2a113dc5dfbc63bfa09e2b9b64362"
-  integrity sha512-zJpuPDwOv8D2zq2WRoMe1HsfZthVewpel9CAvTfc/2mBD1uUT/agc5f7GHGWXlYkFvi1mVxe4IjvP2HNrop7nQ==
-
-nanoid@^3.1.30:
-  version "3.2.0"
-  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.2.0.tgz#62667522da6673971cca916a6d3eff3f415ff80c"
-  integrity sha512-fmsZYa9lpn69Ad5eDn7FMcnnSR+8R34W9qJEijxYhTbfOWzr22n1QxCMzXLK+ODyW2973V3Fux959iQoUxzUIA==
+nanoid@^3.0.2, nanoid@^3.1.20, nanoid@^3.1.23, nanoid@^3.1.30:
+  version "3.3.1"
+  resolved "https://registry.yarnpkg.com/nanoid/-/nanoid-3.3.1.tgz#6347a18cac88af88f58af0b3594b723d5e99bb35"
+  integrity sha512-n6Vs/3KGyxPQd6uO0eH4Bv0ojGSUvuLlIHtC3Y0kEO23YRge8H9x1GCzLn28YX0H66pMkxuaeESFq4tKISKwdw==
 
 native-abort-controller@^1.0.3, native-abort-controller@^1.0.4:
   version "1.0.4"
