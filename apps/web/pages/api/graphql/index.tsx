@@ -6,6 +6,16 @@ import { buildGraphqlSchema } from "openmetagraph-graphql";
 import fetch from "node-fetch";
 import * as IPFS from "ipfs-http-client";
 
+function readSchemasFromQuery(req: NextApiRequest) {
+  const schemas = req.query.schema;
+  if (schemas) {
+    if (Array.isArray(schemas)) return schemas;
+    else return [schemas];
+  } else {
+    return [];
+  }
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -18,6 +28,8 @@ export default async function handler(
   if (!Array.isArray(schemas)) {
     schemas = [schemas];
   }
+  schemas.push(...readSchemasFromQuery(req));
+  console.log("schemas", req.query);
   schemas = schemas.map((s) => s.replace("ipfs://", ""));
 
   const ipfs = IPFS.create("https://ipfs.rebasefoundation.org/api/v0" as any);

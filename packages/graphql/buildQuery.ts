@@ -200,6 +200,7 @@ export async function buildQuery(hooks: Hooks, omgSchemas: string[]) {
             },
           },
           resolve: async (src, { key }, ctx) => {
+            throw new Error("Schema is required");
             const result = await hooks.onGetResource(key);
             assertOrThrow(result, ValidOpenMetaGraphDocument);
             return result;
