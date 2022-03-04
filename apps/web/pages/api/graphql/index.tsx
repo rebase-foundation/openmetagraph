@@ -1,3 +1,5 @@
+import Cors from "cors";
+import Cors from "cors";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getGraphQLParams } from "express-graphql";
 import { OpenMetaGraph, OpenMetaGraphSchema } from "openmetagraph";
@@ -16,10 +18,36 @@ function readSchemasFromQuery(req: NextApiRequest) {
   }
 }
 
+// Helper method to wait for a middleware to execute before continuing
+// And to throw an error when an error happens in a middleware
+function initMiddleware(middleware) {
+  return (req, res) =>
+    new Promise((resolve, reject) => {
+      middleware(req, res, (result) => {
+        if (result instanceof Error) {
+          return reject(result);
+        }
+        return resolve(result);
+      });
+    });
+}
+
+// Initialize the cors middleware
+const cors = initMiddleware(
+  // You can read more about the available options here: https://github.com/expressjs/cors#configuration-options
+  Cors({
+    // Only allow requests with GET, POST and OPTIONS
+    methods: ["GET", "POST", "OPTIONS"],
+  })
+);
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  // Run cors
+  await cors(req, res);
+
   let schemas = req.headers["x-omg-schemas"];
   if (!schemas || schemas.length === 0) {
     schemas = [];

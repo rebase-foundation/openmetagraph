@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "express-graphql": "0.12.0",
     "graphql": "^16.2.0",
     "ipfs-http-client": "^55.0.0",
