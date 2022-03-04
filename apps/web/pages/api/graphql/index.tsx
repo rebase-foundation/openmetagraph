@@ -1,5 +1,4 @@
 import Cors from "cors";
-import Cors from "cors";
 import { NextApiRequest, NextApiResponse } from "next";
 import { getGraphQLParams } from "express-graphql";
 import { OpenMetaGraph, OpenMetaGraphSchema } from "openmetagraph";
