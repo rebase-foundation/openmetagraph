@@ -26,7 +26,7 @@ interface NumberSchemaElement {
 interface NodeSchemaElement {
   object: "node";
   multiple: boolean;
-  schema: string;
+  schemas: string[];
   key: string;
 }
 
@@ -71,7 +71,7 @@ async function postSchema(elements: SchemaElement[]) {
     .map((e) => ({
       key: e.key,
       multiple: !!e.multiple,
-      schema: (e as NodeSchemaElement).schema,
+      schemas: (e as NodeSchemaElement).schemas,
     }));
 
   const mutation = gql`
@@ -109,25 +109,41 @@ export default function Web(props) {
   const elements = schema.map((el) => {
     return (
       <div
-        className="flex items-center border-b flex-row w-full h-full font-mono"
+        className="flex text-sm items-center border-b flex-row w-full h-full font-mono bg-gray-50"
         key={"el" + el.key}
       >
-        <div className="px-2 border-r justify-center w-24 bg-gray-50 flex items-center h-12">
+        <div className="px-2 border-r justify-center w-24 bg-gray-50 flex items-center h-full">
           {el.object}
         </div>
-        <div className="bg-gray-50 flex flex-1 items-center p-2 border-r h-12">
+
+        <div className="bg-gray-50 flex flex-1 items-center px-2 border-r h-full">
           {el.key}
         </div>
 
         {el.object === "file" && (
-          <div className="bg-gray-50 flex flex-1 items-center p-2 border-r h-12">
+          <div className="bg-gray-50 flex flex-1 items-center px-2 border-r h-full">
             {JSON.stringify(el.types || [])}
+          </div>
+        )}
+
+        {el.object === "node" && (
+          <div className="flex flex-col h-full">
+            {el.schemas.map((s) => (
+              <a
+                key={el.key + s}
+                href={`/studio?schema=${s}`}
+                target="_blank"
+                className="bg-gray-50 underline hover:opacity-50 flex flex-1 items-center px-2 border-r"
+              >
+                {s}
+              </a>
+            ))}
           </div>
         )}
 
         <div
           className={cn({
-            "bg-gray-50 flex h-12 items-center px-4": true,
+            "bg-gray-50 flex items-center px-4 h-full": true,
           })}
         >
           {!!next.multiple ? "multiple" : "single"}
@@ -155,6 +171,9 @@ export default function Web(props) {
 
   const [filesInput, setFilesInput] = useState("");
   const [badFiles, setBadFiles] = useState(false);
+
+  const [schemasInput, setSchemasInput] = useState("");
+  const [badSchema, setBadSchemas] = useState(false);
 
   return (
     <div className="bg-gray-50 flex w-full">
@@ -273,25 +292,29 @@ export default function Web(props) {
               />
             )}
             {next.object === "node" && (
-              <div className="flex items-center flex-1 pl-2 border-r bg-white ">
-                <div className="text-sm font-mono">{`ipfs://`}</div>
-                <input
-                  placeholder={`cid`}
-                  className="h-full flex flex-1 font-mono text-sm"
-                  value={next.schema}
-                  onChange={(e) =>
-                    setNext((p) => ({
-                      ...p,
-                      schema: e.target.value
-                        .replace(" ", "_")
-                        .replace("https://openmetagraph.com/sudio/", "")
-                        .replace("localhost:3000/studio/", "")
-                        .replace("openmetagraph.com/studio/", "")
-                        .replace("ipfs://", ""),
-                    }))
+              <input
+                placeholder={`["QmTmZJxiTVgzTmaopkjsy2XiXTu8qQp7F1uSA8wtzHrn9c", "QmQQp9f6fJtyMYXTb7tGic36hPCQ1Z47Z1Y6h86aUyudwT"]`}
+                className={cn({
+                  "border-r px-2 py-2 flex flex-1 font-mono text-sm": true,
+                  "bg-red-50 border border-red-700": badSchema,
+                })}
+                value={schemasInput}
+                onChange={(e) => setSchemasInput(e.target.value)}
+                onBlur={() => {
+                  let fs;
+                  try {
+                    fs = JSON.parse(schemasInput);
+                    setBadSchemas(false);
+                  } catch (err) {
+                    setBadSchemas(true);
+                    return;
                   }
-                />
-              </div>
+                  setNext((p) => ({
+                    ...next,
+                    schemas: fs,
+                  }));
+                }}
+              />
             )}
             <div className="p-1 bg-blue-50 ">
               <button
