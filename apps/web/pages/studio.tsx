@@ -1,5 +1,8 @@
 import cn from "classnames";
-import { useState } from "react";
+import { gql, request } from "graphql-request";
+import { NextPageContext } from "next";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 interface StringSchemaElement {
   object: "string";
@@ -39,25 +42,67 @@ type Schema = {
   };
 };
 
-export default function Web() {
-  const [schema, setSchema] = useState<SchemaElement[]>([
-    {
-      key: "title",
-      object: "string",
-      multiple: false,
+async function postSchema(elements: SchemaElement[]) {
+  if (!elements || elements.length === 0) {
+    return false;
+  }
+
+  const files = elements
+    .filter((e) => e.object === "file")
+    .map((e) => ({
+      key: e.key,
+      types: (e as FileSchemaElement).types,
+      multiple: !!e.multiple,
+    }));
+  const numbers = elements
+    .filter((e) => e.object === "number")
+    .map((e) => ({
+      key: e.key,
+      multiple: !!e.multiple,
+    }));
+  const strings = elements
+    .filter((e) => e.object === "string")
+    .map((e) => ({
+      key: e.key,
+      multiple: !!e.multiple,
+    }));
+
+  const nodes = elements
+    .filter((e) => e.object === "node")
+    .map((e) => ({
+      key: e.key,
+      multiple: !!e.multiple,
+      schema: (e as NodeSchemaElement).schema,
+    }));
+
+  const mutation = gql`
+    # Write your query or mutation here
+    mutation createSchema($schema: SchemaInput) {
+      createSchema(schema: $schema) {
+        key
+      }
+    }
+  `;
+
+  const data = await request("/api/graphql", mutation, {
+    schema: {
+      files,
+      nodes,
+      strings,
+      numbers,
     },
-    {
-      key: "description",
-      object: "string",
-      multiple: false,
-    },
-    {
-      key: "primaryPhoto",
-      object: "file",
-      multiple: false,
-      types: ["image/png"],
-    },
-  ]);
+  });
+  return data.createSchema.key;
+}
+
+export default function Web(props) {
+  let loadedSchema = Object.entries(props.schema?.elements || []).map(
+    ([key, value]: any) => ({
+      key,
+      ...value,
+    })
+  );
+  const [schema, setSchema] = useState<SchemaElement[]>(loadedSchema);
   const [next, setNext] = useState<Partial<SchemaElement>>({
     object: "string",
   });
@@ -83,13 +128,28 @@ export default function Web() {
     );
   });
 
+  const router = useRouter();
+
+  function onNewElment() {
+    setSchema((s) => {
+      return [...s, next as any];
+    });
+
+    postSchema([...schema, next as any]).then((key) => {
+      if (!key) return;
+      router.push("?schema=" + key.replace("ipfs://", ""));
+    });
+  }
+
   return (
     <div className="bg-gray-50 flex w-full">
       <div className="flex flex-col bg-white w-full h-full max-w-6xl mx-auto border-l border-r">
         <div className="px-2 py-4 border-b items-center flex text-sm  text-gray-400">
           <div className="mr-4">OpenMetaGraph Studio</div>
           <input
-            placeholder="ipfs://cid"
+            placeholder="ipfs://..."
+            value={("ipfs://" + router.query.schema) as any}
+            onChange={() => {}}
             className="flex border bg-white p-2 flex-1"
           />
         </div>
@@ -223,7 +283,21 @@ export default function Web() {
             </div>
           </div>
           <div className="px-2 py-2 bg-blue-50 border-b flex justify-end">
-            <button className="border flex items-center bg-white px-4 py-2 border-blue-500 text-blue-700">
+            <button
+              className="border flex items-center bg-white px-4 py-2 border-blue-500 text-blue-700 disabled:opacity-20"
+              disabled={
+                // Is file, but no types
+                (next.key === "file" && !(next as FileSchemaElement).types) ||
+                // Is node, but no schema
+                (next.key === "node" && !(next as NodeSchemaElement).schema) ||
+                // Is anything, but no keys
+                !next.key ||
+                next.key.length === 0
+              }
+              onClick={() => {
+                onNewElment();
+              }}
+            >
               Add New Element{" "}
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -254,4 +328,39 @@ export default function Web() {
       </div>
     </div>
   );
+}
+
+export async function getServerSideProps(ctx: NextPageContext) {
+  if (!ctx.query.schema) {
+    return {
+      props: {},
+    };
+  }
+
+  let k = (ctx.query.schema as any).replace("ipfs://", "");
+
+  let url = "https://ipfs.rebasefoundation.org/api/v0/cat?arg=" + k;
+  const result = await fetch(url, {
+    method: "POST",
+  });
+  if (result.status !== 200) {
+    throw new Error(
+      `Unexpectedly failed to fetch '${url}' with status code ${
+        result.status
+      } and body ${await result.text()}`
+    );
+  }
+
+  const json = await result.json();
+  if (!json || json.object !== "schema") {
+    return {
+      props: {},
+    };
+  }
+
+  return {
+    props: {
+      schema: json,
+    },
+  };
 }
