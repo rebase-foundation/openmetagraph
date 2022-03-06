@@ -51,7 +51,7 @@ async function postSchema(elements: SchemaElement[]) {
     .filter((e) => e.object === "file")
     .map((e) => ({
       key: e.key,
-      types: (e as FileSchemaElement).types,
+      types: (e as FileSchemaElement).types || [],
       multiple: !!e.multiple,
     }));
   const numbers = elements
@@ -66,7 +66,6 @@ async function postSchema(elements: SchemaElement[]) {
       key: e.key,
       multiple: !!e.multiple,
     }));
-
   const nodes = elements
     .filter((e) => e.object === "node")
     .map((e) => ({
@@ -120,6 +119,12 @@ export default function Web(props) {
           {el.key}
         </div>
 
+        {el.object === "file" && (
+          <div className="bg-gray-50 flex flex-1 items-center p-2 border-r h-12">
+            {JSON.stringify(el.types || [])}
+          </div>
+        )}
+
         <div
           className={cn({
             "bg-gray-50 flex h-12 items-center px-4": true,
@@ -138,11 +143,18 @@ export default function Web(props) {
       return [...s, next as any];
     });
 
+    setNext({
+      object: "string",
+    });
+
     postSchema([...schema, next as any]).then((key) => {
       if (!key) return;
       router.push("?schema=" + key.replace("ipfs://", ""));
     });
   }
+
+  const [filesInput, setFilesInput] = useState("");
+  const [badFiles, setBadFiles] = useState(false);
 
   return (
     <div className="bg-gray-50 flex w-full">
@@ -237,14 +249,27 @@ export default function Web(props) {
             {next.object === "file" && (
               <input
                 placeholder={`["images/png", "images/gif"]`}
-                className="border-r px-2 py-2 flex flex-1 font-mono text-sm"
-                value={next.types}
-                onChange={(e) =>
+                className={cn({
+                  "border-r px-2 py-2 flex flex-1 font-mono text-sm": true,
+                  "bg-red-50 border border-red-700": badFiles,
+                })}
+                value={filesInput}
+                onChange={(e) => setFilesInput(e.target.value)}
+                onBlur={() => {
+                  let fs;
+                  try {
+                    fs = JSON.parse(filesInput);
+                    setBadFiles(false);
+                  } catch (err) {
+                    setBadFiles(true);
+                    return;
+                  }
+                  console.log("fs", fs);
                   setNext((p) => ({
-                    ...p,
-                    key: e.target.value.replace(" ", "_"),
-                  }))
-                }
+                    ...next,
+                    types: fs,
+                  }));
+                }}
               />
             )}
             {next.object === "node" && (
