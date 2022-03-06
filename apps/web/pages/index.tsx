@@ -53,7 +53,9 @@ export default function Web() {
               OpenMetaGraph gateway
             </a>
             , or use{" "}
-            <a href="https://openmetagraph.com/api/graphql">a public one.</a>
+            <a href="https://www.openmetagraph.com/api/graphql">
+              a public one.
+            </a>
           </p>
 
           <pre className="text-sm">
