@@ -130,7 +130,7 @@ export default function Web(props) {
             "bg-gray-50 flex h-12 items-center px-4": true,
           })}
         >
-          multiple
+          {!!next.multiple ? "multiple" : "single"}
         </div>
       </div>
     );
