@@ -306,7 +306,7 @@ export default function Web(props) {
                   setNext((p) => ({ ...p, multiple: !p.multiple }))
                 }
               >
-                multiple
+                {!!next.multiple ? "multiple" : "single"}
               </button>
             </div>
           </div>
