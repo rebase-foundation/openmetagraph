@@ -109,7 +109,10 @@ export default function Web(props) {
 
   const elements = schema.map((el) => {
     return (
-      <div className="flex items-center border-b flex-row w-full h-full font-mono">
+      <div
+        className="flex items-center border-b flex-row w-full h-full font-mono"
+        key={"el" + el.key}
+      >
         <div className="px-2 border-r justify-center w-24 bg-gray-50 flex items-center h-12">
           {el.object}
         </div>
