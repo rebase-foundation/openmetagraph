@@ -3,6 +3,8 @@ import { gql, request } from "graphql-request";
 import { NextPageContext } from "next";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import Head from "next/head";
+import { OpenMetaGraphSchema } from "openmetagraph";
 
 interface StringSchemaElement {
   object: "string";
@@ -41,31 +43,31 @@ type Schema = {
   };
 };
 
-async function postSchema(elements: SchemaElement[]) {
+async function postSchema(name: string, elements: SchemaElement[]) {
   if (!elements || elements.length === 0) {
     return false;
   }
 
   const files = elements
-    .filter((e) => e.object === "file")
+    .filter((e) => e.object === "file" && e.key)
     .map((e) => ({
       key: e.key,
       multiple: !!e.multiple,
     }));
   const numbers = elements
-    .filter((e) => e.object === "number")
+    .filter((e) => e.object === "number" && e.key)
     .map((e) => ({
       key: e.key,
       multiple: !!e.multiple,
     }));
   const strings = elements
-    .filter((e) => e.object === "string")
+    .filter((e) => e.object === "string" && e.key)
     .map((e) => ({
       key: e.key,
       multiple: !!e.multiple,
     }));
   const nodes = elements
-    .filter((e) => e.object === "node")
+    .filter((e) => e.object === "node" && e.key)
     .map((e) => ({
       key: e.key,
       multiple: !!e.multiple,
@@ -83,6 +85,7 @@ async function postSchema(elements: SchemaElement[]) {
 
   const data = await request("/api/graphql", mutation, {
     schema: {
+      name,
       files,
       nodes,
       strings,
@@ -99,6 +102,8 @@ export default function Web(props) {
       ...value,
     })
   );
+  const [nameInput, setNameInput] = useState("");
+  const [name, setName] = useState(props.schema?.name);
   const [schema, setSchema] = useState<SchemaElement[]>(loadedSchema);
   const [next, setNext] = useState<Partial<SchemaElement>>({
     object: "string",
@@ -206,10 +211,6 @@ export default function Web(props) {
 
   const router = useRouter();
 
-  function clear() {
-    router.push("/studio");
-  }
-
   function onNewElement() {
     setSchema((s) => {
       return [...s, next as any].sort((a, b) => a.key.localeCompare(b.key));
@@ -220,11 +221,27 @@ export default function Web(props) {
     });
 
     postSchema(
+      name,
       [...schema, next as any].sort((a, b) => a.key.localeCompare(b.key))
     ).then((key) => {
       if (!key) return;
       router.push("?schema=" + key.replace("ipfs://", ""));
     });
+  }
+
+  function onCreateName() {
+    postSchema(
+      nameInput,
+      [...(schema || []), next as any].sort((a, b) =>
+        a.key.localeCompare(b.key)
+      )
+    ).then((key) => {
+      if (!key) return;
+      router.push("?schema=" + key.replace("ipfs://", ""));
+    });
+
+    setName(nameInput);
+    setNameInput("");
   }
 
   const [filesInput, setFilesInput] = useState("");
@@ -236,6 +253,14 @@ export default function Web(props) {
 
   return (
     <div className="bg-gray-50 flex w-full">
+      <Head>
+        <title>
+          {router.query?.schema
+            ? router.query.schema + " OpenMetaGraph Schema"
+            : "OpenMetaGraph Schema Creator"}
+        </title>
+        <meta name="keywords" content={schema.map((s) => s.key).join(",")} />
+      </Head>
       <div className="flex flex-col bg-white w-full h-full max-w-6xl mx-auto border-l border-r">
         <div className="px-2 py-4 border-b items-center flex justify-between text-sm  text-gray-400">
           <h1 className="mr-4 text-sm font-normal p-0">OpenMetaGraph Studio</h1>
@@ -303,158 +328,194 @@ export default function Web(props) {
           </button>
         </div>
 
-        <div className="flex flex-col">
-          {isPretty ? (
-            elements
-          ) : (
-            <pre className="text-sm px-4">
-              {JSON.stringify(props.schema, null, 2)}
-            </pre>
-          )}
-
-          <div className="px-2 py-1 border-b text-sm  items-center justify-between flex bg-gray-100  text-gray-400">
-            <div>Add new element</div>
-          </div>
-
-          <div className="p-1 bg-blue-50">
-            <div className="flex flex-row justify-between gap-1">
-              <button
-                className={cn({
-                  "border hover:opacity-70 px-4 py-2 flex-1": true,
-                  "bg-purple-500 text-white border-purple-900 shadow-inner":
-                    next.object === "string",
-                  "bg-white text-purple-600": next.object !== "string",
-                })}
-                onClick={() => setNext((p) => ({ ...p, object: "string" }))}
-              >
-                String
-              </button>
-              <button
-                className={cn({
-                  "border hover:opacity-70 px-4 py-2 flex-1": true,
-                  "bg-red-500 text-white border-red-900 shadow-inner":
-                    next.object === "number",
-                  "bg-white text-red-600": next.object !== "number",
-                })}
-                onClick={() => setNext((p) => ({ ...p, object: "number" }))}
-              >
-                Number
-              </button>
-              <button
-                className={cn({
-                  "border hover:opacity-70 px-4 py-2 flex-1": true,
-                  "bg-blue-500 text-white border-blue-900 shadow-inner":
-                    next.object === "file",
-                  "bg-white text-blue-600": next.object !== "file",
-                })}
-                onClick={() => setNext((p) => ({ ...p, object: "file" }))}
-              >
-                File
-              </button>
-              <button
-                className={cn({
-                  "border hover:opacity-70 px-4 py-2 flex-1": true,
-                  "bg-green-500 text-white border-green-900 shadow-inner":
-                    next.object === "node",
-                  "bg-white text-green-600": next.object !== "node",
-                })}
-                onClick={() => setNext((p) => ({ ...p, object: "node" }))}
-              >
-                Node
-              </button>
-            </div>
-          </div>
-
-          <div className="border-t flex border-b w-full bg-blue-50">
-            <input
-              placeholder="key"
-              className={cn({
-                "border-r ml-1 border-l px-2 py-2 flex font-mono text-sm": true,
-                "flex-1": next.object !== "node",
-              })}
-              value={next.key || ""}
-              onChange={(e) =>
-                setNext((p) => ({
-                  ...p,
-                  key: e.target.value.replace(" ", "_"),
-                }))
-              }
-            />
-
-            {next.object === "node" && (
-              <input
-                placeholder={`["QmTmZJxiTVgzTmaopkjsy2XiXTu8qQp7F1uSA8wtzHrn9c", "QmQQp9f6fJtyMYXTb7tGic36hPCQ1Z47Z1Y6h86aUyudwT"]`}
-                className={cn({
-                  "border-r px-2 py-2 flex flex-1 font-mono text-sm": true,
-                  "bg-red-50 border border-red-700": badSchema,
-                })}
-                value={schemasInput || ""}
-                onChange={(e) => setSchemasInput(e.target.value)}
-                onBlur={() => {
-                  let fs;
-                  try {
-                    fs = JSON.parse(schemasInput);
-                    setBadSchemas(false);
-                  } catch (err) {
-                    setBadSchemas(true);
-                    return;
-                  }
-                  setNext((p) => ({
-                    ...next,
-                    schemas: fs,
-                  }));
-                }}
-              />
-            )}
-            <div className="p-1 bg-blue-50 ">
-              <button
-                placeholder="key"
-                className={cn({
-                  "border px-2 py-2 flex flex-1 text-center ": true,
-                  "bg-white": !next.multiple,
-                  "bg-blue-500 text-white border-blue-900 shadow-inner":
-                    !!next.multiple,
-                })}
-                onClick={() =>
-                  setNext((p) => ({ ...p, multiple: !p.multiple }))
-                }
-              >
-                {!!next.multiple ? "multiple" : "single"}
-              </button>
-            </div>
-          </div>
-          <div className="px-2 py-2 bg-blue-50 border-b flex justify-end">
-            <button
-              className="border flex items-center bg-white px-4 py-2 border-blue-500 text-blue-700 disabled:opacity-20"
-              disabled={
-                // Is node, but no schema
-                (next.key === "node" && !(next as NodeSchemaElement).schemas) ||
-                // Is anything, but no keys
-                !next.key ||
-                next.key.length === 0
-              }
-              onClick={() => {
-                onNewElement();
-              }}
-            >
-              Add New Element{" "}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 ml-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M17 8l4 4m0 0l-4 4m4-4H3"
-                />
-              </svg>
-            </button>
+        <div className="flex border-b bg-gray-50 p-2">
+          <div className=" flex flex-1 items-start h-full flex-col font-mono">
+            <div className="text-xs text-gray-400 pt-1 ">Name</div>
+            {name}
           </div>
         </div>
+
+        {!name && (
+          <div className="flex flex-col border-b">
+            <div className="px-2 py-1 border-b text-sm items-center justify-between flex bg-gray-100  text-gray-400">
+              <div>Create a schema</div>
+            </div>
+            <div className="flex w-full bg-blue-50 p-1">
+              <input
+                className="border px-2 py-2 flex flex-1 font-mono text-sm"
+                value={nameInput}
+                placeholder="name; ex: person"
+                onChange={(e) =>
+                  setNameInput(e.target.value.toLowerCase().replace(" ", "_"))
+                }
+              />
+
+              <button
+                className="p-2 hover:bg-blue-100 hover:border-blue-500 border bg-white hover:opacity-70 px-4 py-2 ml-2"
+                onClick={() => onCreateName()}
+              >
+                create
+              </button>
+            </div>
+          </div>
+        )}
+
+        {name && (
+          <div className="flex flex-col">
+            {isPretty ? (
+              elements
+            ) : (
+              <pre className="text-sm px-4">
+                {JSON.stringify(props.schema, null, 2)}
+              </pre>
+            )}
+
+            <div className="px-2 py-1 border-b text-sm  items-center justify-between flex bg-gray-100  text-gray-400">
+              <div>Add new element</div>
+            </div>
+
+            <div className="p-1 bg-blue-50">
+              <div className="flex flex-row justify-between gap-1">
+                <button
+                  className={cn({
+                    "border hover:opacity-70 px-4 py-2 flex-1": true,
+                    "bg-purple-500 text-white border-purple-900 shadow-inner":
+                      next.object === "string",
+                    "bg-white text-purple-600": next.object !== "string",
+                  })}
+                  onClick={() => setNext((p) => ({ ...p, object: "string" }))}
+                >
+                  String
+                </button>
+                <button
+                  className={cn({
+                    "border hover:opacity-70 px-4 py-2 flex-1": true,
+                    "bg-red-500 text-white border-red-900 shadow-inner":
+                      next.object === "number",
+                    "bg-white text-red-600": next.object !== "number",
+                  })}
+                  onClick={() => setNext((p) => ({ ...p, object: "number" }))}
+                >
+                  Number
+                </button>
+                <button
+                  className={cn({
+                    "border hover:opacity-70 px-4 py-2 flex-1": true,
+                    "bg-blue-500 text-white border-blue-900 shadow-inner":
+                      next.object === "file",
+                    "bg-white text-blue-600": next.object !== "file",
+                  })}
+                  onClick={() => setNext((p) => ({ ...p, object: "file" }))}
+                >
+                  File
+                </button>
+                <button
+                  className={cn({
+                    "border hover:opacity-70 px-4 py-2 flex-1": true,
+                    "bg-green-500 text-white border-green-900 shadow-inner":
+                      next.object === "node",
+                    "bg-white text-green-600": next.object !== "node",
+                  })}
+                  onClick={() => setNext((p) => ({ ...p, object: "node" }))}
+                >
+                  Node
+                </button>
+              </div>
+            </div>
+
+            <div className="border-t flex border-b w-full bg-blue-50">
+              <input
+                placeholder="key"
+                className={cn({
+                  "border-r ml-1 border-l px-2 py-2 flex font-mono text-sm":
+                    true,
+                  "flex-1": next.object !== "node",
+                })}
+                value={next.key || ""}
+                onChange={(e) =>
+                  setNext((p) => ({
+                    ...p,
+                    key: e.target.value.replace(" ", "_"),
+                  }))
+                }
+              />
+
+              {next.object === "node" && (
+                <input
+                  placeholder={`["QmTmZJxiTVgzTmaopkjsy2XiXTu8qQp7F1uSA8wtzHrn9c", "QmQQp9f6fJtyMYXTb7tGic36hPCQ1Z47Z1Y6h86aUyudwT"]`}
+                  className={cn({
+                    "border-r px-2 py-2 flex flex-1 font-mono text-sm": true,
+                    "bg-red-50 border border-red-700": badSchema,
+                  })}
+                  value={schemasInput || ""}
+                  onChange={(e) => setSchemasInput(e.target.value)}
+                  onBlur={() => {
+                    let fs;
+                    try {
+                      fs = JSON.parse(schemasInput);
+                      setBadSchemas(false);
+                    } catch (err) {
+                      setBadSchemas(true);
+                      return;
+                    }
+                    setNext((p) => ({
+                      ...next,
+                      schemas: fs,
+                    }));
+                  }}
+                />
+              )}
+              <div className="p-1 bg-blue-50 ">
+                <button
+                  placeholder="key"
+                  className={cn({
+                    "border px-2 py-2 flex flex-1 text-center ": true,
+                    "bg-white": !next.multiple,
+                    "bg-blue-500 text-white border-blue-900 shadow-inner":
+                      !!next.multiple,
+                  })}
+                  onClick={() =>
+                    setNext((p) => ({ ...p, multiple: !p.multiple }))
+                  }
+                >
+                  {!!next.multiple ? "multiple" : "single"}
+                </button>
+              </div>
+            </div>
+            <div className="px-2 py-2 bg-blue-50 border-b flex justify-end">
+              <button
+                className="border flex items-center bg-white px-4 py-2 border-blue-500 text-blue-700 disabled:opacity-20"
+                disabled={
+                  // Is node, but no schema
+                  (next.key === "node" &&
+                    !(next as NodeSchemaElement).schemas) ||
+                  // Is anything, but no keys
+                  !next.key ||
+                  next.key.length === 0
+                }
+                onClick={() => {
+                  onNewElement();
+                }}
+              >
+                Add New Element{" "}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 ml-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
         <div className="flex-1"></div>
         <div className="px-2 py-1 flex justify-between text-sm bg-gray-100 text-gray-400 border-t">
           <a
@@ -490,7 +551,7 @@ export async function getServerSideProps(ctx: NextPageContext) {
     );
   }
 
-  const json = await result.json();
+  const json = (await result.json()) as OpenMetaGraphSchema;
   if (!json || json.object !== "schema") {
     return {
       props: {},

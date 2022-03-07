@@ -63,6 +63,7 @@ export const ValidOpenMetaGraphDocument = object({
 export const ValidOpenMetaGraphSchema = object({
   object: pattern(string(), /schema/),
   version: string(),
+  name: string(),
   elements: record(
     string(),
     union([

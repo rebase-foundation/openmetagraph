@@ -84,6 +84,9 @@ export const SchemaInputType = new GraphQLInputObjectType({
   name: "SchemaInput",
   description: "Input for creating a schema",
   fields: {
+    name: {
+      type: GraphQLString,
+    },
     files: {
       type: new GraphQLList(FileSchemaInput),
     },

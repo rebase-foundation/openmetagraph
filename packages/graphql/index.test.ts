@@ -6,6 +6,7 @@ test("Basic Example", async () => {
   const omgschema: OpenMetaGraphSchema = {
     object: "schema",
     version: "0.1.0",
+    name: "schema",
     elements: {
       title: {
         object: "string",
@@ -71,6 +72,7 @@ test("CreateDocument example", async () => {
   const omgschema: OpenMetaGraphSchema = {
     object: "schema",
     version: "0.1.0",
+    name: "schema",
     elements: {
       title: {
         object: "string",
@@ -145,6 +147,7 @@ test("CreateDocument example", async () => {
   const omgschema: OpenMetaGraphSchema = {
     object: "schema",
     version: "0.1.0",
+    name: "schema",
     elements: {
       title: {
         object: "string",
@@ -218,6 +221,7 @@ test("CreateDocument missing element", async () => {
   const omgschema: OpenMetaGraphSchema = {
     object: "schema",
     version: "0.1.0",
+    name: "schema",
     elements: {
       title: {
         object: "string",
@@ -285,6 +289,7 @@ test("CreateDocument duplicate element", async () => {
   const omgschema: OpenMetaGraphSchema = {
     object: "schema",
     version: "0.1.0",
+    name: "schema",
     elements: {
       title: {
         object: "string",
@@ -353,6 +358,7 @@ test("Multiple example", async () => {
   const omgschema: OpenMetaGraphSchema = {
     object: "schema",
     version: "0.1.0",
+    name: "schema",
     elements: {
       title: {
         object: "string",
@@ -448,6 +454,7 @@ test("Resolving a node", async () => {
   const innerSchema: OpenMetaGraphSchema = {
     object: "schema",
     version: "0.1.0",
+    name: "schema",
     elements: {
       data: {
         object: "string",
@@ -459,6 +466,7 @@ test("Resolving a node", async () => {
   const outerSchema: OpenMetaGraphSchema = {
     object: "schema",
     version: "0.1.0",
+    name: "schema",
     elements: {
       inner: {
         object: "node",

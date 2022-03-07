@@ -26,13 +26,11 @@ export default function Web() {
     {
       "object": "file",
       "key": "photos",
-      "contentType": "image/png",
       "uri": "ipfs://some-cid"
     },
     {
       "object": "file",
       "key": "photos",
-      "contentType": "image/png",
       "uri": "ipfs://another-cid"
     },
     {

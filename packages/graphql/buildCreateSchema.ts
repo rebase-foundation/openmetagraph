@@ -64,12 +64,14 @@ export function buildCreateSchema(hooks: Hooks) {
         },
         {}
       );
+      const name = args.schema.name as string;
 
       const elements = Object.assign({}, strings, numbers, files, nodes);
 
       const openMetagraphSchema: OpenMetaGraphSchema = {
         object: "schema",
         version: "0.1.0",
+        name: name,
         elements: elements,
       };
       assertOrThrow(openMetagraphSchema, ValidOpenMetaGraphSchema);

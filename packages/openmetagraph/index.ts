@@ -26,6 +26,7 @@ export type OpenMetaGraphNodeElement = {
 export interface OpenMetaGraphSchema {
   object: "schema";
   version: string;
+  name: string;
   elements: {
     [key: string]:
       | {

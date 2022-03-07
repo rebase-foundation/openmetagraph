@@ -79,7 +79,6 @@ export default async function handler(
     }
 
     const json = await result.json();
-    console.log("key", json);
     return json as any;
   }
 
