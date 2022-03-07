@@ -13,10 +13,10 @@ export default function Layout(props: { children: any }) {
 
           <div className="flex gap-1 items-center">
             <a
-              href="/explorer"
+              href="/studio"
               className=" underline text-sm px-2 flex justify-between items-center p-1 rounded-sm hover:opacity-50 cursor-pointer"
             >
-              explorer
+              studio
             </a>
             <a
               target={"_blank"}
