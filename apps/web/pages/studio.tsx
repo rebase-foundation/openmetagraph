@@ -207,7 +207,7 @@ export default function Web(props) {
             "bg-gray-50 flex items-center px-4 h-full": true,
           })}
         >
-          {!!next.multiple ? "multiple" : "single"}
+          {el.multiple ? "multiple" : "single"}
         </div>
       </div>
     );
