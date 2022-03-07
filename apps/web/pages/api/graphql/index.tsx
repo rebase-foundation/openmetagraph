@@ -93,7 +93,20 @@ export default async function handler(
         };
       },
       onPostSchema: async (doc) => {
-        const result = await ipfs.add(JSON.stringify(doc));
+        // Schema's should sort elements by their keys, to make the
+        // IPFS CID hash the same.
+        doc.elements = JSON.parse(
+          JSON.stringify(
+            doc.elements,
+            Object.keys(doc.elements).sort((a, b) => a.localeCompare(b))
+          )
+        );
+        const result = await ipfs.add(
+          JSON.stringify(
+            doc,
+            Object.keys(doc).sort((a, b) => a.localeCompare(b))
+          )
+        );
         return {
           key: "ipfs://" + result.cid.toString(),
         };
