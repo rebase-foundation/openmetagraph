@@ -83,6 +83,11 @@ export default async function handler(
     return json as any;
   }
 
+  const sortObject = (o) =>
+    Object.keys(o)
+      .sort()
+      .reduce((r, k) => ((r[k] = o[k]), r), {});
+
   const schema = await buildGraphqlSchema(
     {
       onGetResource: fetcher,
@@ -95,18 +100,9 @@ export default async function handler(
       onPostSchema: async (doc) => {
         // Schema's should sort elements by their keys, to make the
         // IPFS CID hash the same.
-        doc.elements = JSON.parse(
-          JSON.stringify(
-            doc.elements,
-            Object.keys(doc.elements).sort((a, b) => a.localeCompare(b))
-          )
-        );
-        const result = await ipfs.add(
-          JSON.stringify(
-            doc,
-            Object.keys(doc).sort((a, b) => a.localeCompare(b))
-          )
-        );
+        doc.elements = JSON.parse(JSON.stringify(sortObject(doc.elements)));
+
+        const result = await ipfs.add(JSON.stringify(doc));
         return {
           key: "ipfs://" + result.cid.toString(),
         };

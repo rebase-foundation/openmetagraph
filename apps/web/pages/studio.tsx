@@ -215,7 +215,7 @@ export default function Web(props) {
 
   const router = useRouter();
 
-  function onNewElment() {
+  function onNewElement() {
     setSchema((s) => {
       return [...s, next as any].sort((a, b) => a.key.localeCompare(b.key));
     });
@@ -234,9 +234,10 @@ export default function Web(props) {
 
   const [filesInput, setFilesInput] = useState("");
   const [badFiles, setBadFiles] = useState(false);
-
   const [schemasInput, setSchemasInput] = useState("");
   const [badSchema, setBadSchemas] = useState(false);
+
+  const [isPretty, setIsPretty] = useState(true);
 
   return (
     <div className="bg-gray-50 flex w-full">
@@ -283,18 +284,35 @@ export default function Web(props) {
 
         <div
           className={cn({
-            "px-2 py-1 border-b flex justify-between text-sm bg-gray-100 text-gray-400":
+            "px-2 py-1 border-b flex items-center justify-between text-sm bg-gray-100 text-gray-400":
               true,
             hidden: elements.length === 0,
           })}
         >
           <div>Schema</div>
+
+          <button
+            className={cn({
+              "border  px-2 py-1 text-blue-900 ": true,
+              "bg-white ": isPretty,
+              "bg-blue-50 border-blue-300 shadow-inner": !isPretty,
+            })}
+            onClick={() => setIsPretty(!isPretty)}
+          >
+            Show as JSON
+          </button>
         </div>
 
         <div className="flex flex-col">
-          {elements}
+          {isPretty ? (
+            elements
+          ) : (
+            <pre className="text-sm px-4">
+              {JSON.stringify(props.schema, null, 2)}
+            </pre>
+          )}
 
-          <div className="px-2 py-1 border-b text-sm bg-gray-100  text-gray-400">
+          <div className="px-2 py-1 border-b text-sm  items-center justify-between flex bg-gray-100  text-gray-400">
             <div>Add new element</div>
           </div>
 
@@ -355,7 +373,7 @@ export default function Web(props) {
                 "flex-1": next.object !== "file" && next.object !== "node",
                 "flex-2": next.object === "file",
               })}
-              value={next.key}
+              value={next.key || ""}
               onChange={(e) =>
                 setNext((p) => ({
                   ...p,
@@ -371,7 +389,7 @@ export default function Web(props) {
                   "border-r px-2 py-2 flex flex-1 font-mono text-sm": true,
                   "bg-red-50 border border-red-700": badFiles,
                 })}
-                value={filesInput}
+                value={filesInput || ""}
                 onChange={(e) => setFilesInput(e.target.value)}
                 onBlur={() => {
                   let fs;
@@ -397,7 +415,7 @@ export default function Web(props) {
                   "border-r px-2 py-2 flex flex-1 font-mono text-sm": true,
                   "bg-red-50 border border-red-700": badSchema,
                 })}
-                value={schemasInput}
+                value={schemasInput || ""}
                 onChange={(e) => setSchemasInput(e.target.value)}
                 onBlur={() => {
                   let fs;
@@ -445,7 +463,7 @@ export default function Web(props) {
                 next.key.length === 0
               }
               onClick={() => {
-                onNewElment();
+                onNewElement();
               }}
             >
               Add New Element{" "}
