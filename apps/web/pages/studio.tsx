@@ -175,7 +175,7 @@ export default function Web(props) {
         </div>
 
         <div className="bg-gray-50 flex flex-1 items-start px-2 border-r h-full flex-col">
-          <div className="text-xs text-gray-400">key</div>
+          <div className="text-xs text-gray-400 pt-1">key</div>
           {el.key}
         </div>
 
