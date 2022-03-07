@@ -174,24 +174,27 @@ export default function Web(props) {
           )}
         </div>
 
-        <div className="bg-gray-50 flex flex-1 items-center px-2 border-r h-full">
+        <div className="bg-gray-50 flex flex-1 items-start px-2 border-r h-full flex-col">
+          <div className="text-xs text-gray-400">key</div>
           {el.key}
         </div>
 
         {el.object === "file" && (
-          <div className="bg-gray-50 flex flex-1 items-center px-2 border-r h-full">
+          <div className="bg-gray-50 flex flex-1 items-start px-2 border-r h-full flex-col ">
+            <div className="pt-1 text-xs text-gray-400">types</div>
             {JSON.stringify(el.types || [])}
           </div>
         )}
 
         {el.object === "node" && (
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-full border-r">
+            <div className="px-2 pt-1 text-xs text-gray-400">schemas</div>
             {el.schemas.map((s) => (
               <a
                 key={el.key + s}
                 href={`/studio?schema=${s}`}
                 target="_blank"
-                className="bg-gray-50 underline hover:opacity-50 flex flex-1 items-center px-2 border-r"
+                className="bg-gray-50 underline hover:opacity-50 flex flex-1 items-center px-2 "
               >
                 {s}
               </a>
