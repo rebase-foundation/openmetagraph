@@ -13,7 +13,6 @@ interface StringSchemaElement {
 interface FileSchemaElement {
   object: "file";
   multiple: boolean;
-  types: string[];
   key: string;
 }
 
@@ -51,7 +50,6 @@ async function postSchema(elements: SchemaElement[]) {
     .filter((e) => e.object === "file")
     .map((e) => ({
       key: e.key,
-      types: (e as FileSchemaElement).types || [],
       multiple: !!e.multiple,
     }));
   const numbers = elements
@@ -178,13 +176,6 @@ export default function Web(props) {
           <div className="text-xs text-gray-400 pt-1">key</div>
           {el.key}
         </div>
-
-        {el.object === "file" && (
-          <div className="bg-gray-50 flex flex-1 items-start px-2 border-r h-full flex-col ">
-            <div className="pt-1 text-xs text-gray-400">types</div>
-            {JSON.stringify(el.types || [])}
-          </div>
-        )}
 
         {el.object === "node" && (
           <div className="flex flex-col h-full border-r">
@@ -370,8 +361,7 @@ export default function Web(props) {
               placeholder="key"
               className={cn({
                 "border-r ml-1 border-l px-2 py-2 flex font-mono text-sm": true,
-                "flex-1": next.object !== "file" && next.object !== "node",
-                "flex-2": next.object === "file",
+                "flex-1": next.object !== "node",
               })}
               value={next.key || ""}
               onChange={(e) =>
@@ -382,32 +372,6 @@ export default function Web(props) {
               }
             />
 
-            {next.object === "file" && (
-              <input
-                placeholder={`["images/png", "images/gif"]`}
-                className={cn({
-                  "border-r px-2 py-2 flex flex-1 font-mono text-sm": true,
-                  "bg-red-50 border border-red-700": badFiles,
-                })}
-                value={filesInput || ""}
-                onChange={(e) => setFilesInput(e.target.value)}
-                onBlur={() => {
-                  let fs;
-                  try {
-                    fs = JSON.parse(filesInput);
-                    setBadFiles(false);
-                  } catch (err) {
-                    setBadFiles(true);
-                    return;
-                  }
-                  console.log("fs", fs);
-                  setNext((p) => ({
-                    ...next,
-                    types: fs,
-                  }));
-                }}
-              />
-            )}
             {next.object === "node" && (
               <input
                 placeholder={`["QmTmZJxiTVgzTmaopkjsy2XiXTu8qQp7F1uSA8wtzHrn9c", "QmQQp9f6fJtyMYXTb7tGic36hPCQ1Z47Z1Y6h86aUyudwT"]`}
@@ -454,8 +418,6 @@ export default function Web(props) {
             <button
               className="border flex items-center bg-white px-4 py-2 border-blue-500 text-blue-700 disabled:opacity-20"
               disabled={
-                // Is file, but no types
-                (next.key === "file" && !(next as FileSchemaElement).types) ||
                 // Is node, but no schema
                 (next.key === "node" && !(next as NodeSchemaElement).schemas) ||
                 // Is anything, but no keys

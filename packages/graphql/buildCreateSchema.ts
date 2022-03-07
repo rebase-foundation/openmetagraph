@@ -37,15 +37,11 @@ export function buildCreateSchema(hooks: Hooks) {
         {}
       );
       const files = args.schema.files.reduce(
-        (
-          s: object,
-          value: { key: string; types: string[]; multiple: boolean }
-        ) => {
+        (s: object, value: { key: string; multiple: boolean }) => {
           return {
             ...s,
             [value.key]: {
               object: "file",
-              types: value.types,
               multiple: value.multiple,
             },
           };

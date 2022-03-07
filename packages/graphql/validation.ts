@@ -69,7 +69,6 @@ export const ValidOpenMetaGraphSchema = object({
       object({
         object: pattern(string(), /file/),
         multiple: boolean(),
-        types: array(string()),
       }),
       object({
         object: pattern(string(), /string/),

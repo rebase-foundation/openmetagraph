@@ -6,7 +6,6 @@ interface OpenMetaGraphSchema {
     [key: string]:
       | {
           object: "file";
-          types: string[];
         }
       | {
           object: "string";
@@ -25,7 +24,6 @@ const foo: OpenMetaGraphSchema = {
   elements: {
     photos: {
       object: "file",
-      types: ["image/gif", "image/png"],
     },
     title: {
       object: "string",

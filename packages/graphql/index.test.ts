@@ -77,7 +77,6 @@ test("CreateDocument example", async () => {
         multiple: false,
       },
       photos: {
-        types: ["image/png"],
         object: "file",
         multiple: true,
       },
@@ -129,7 +128,7 @@ test("CreateDocument example", async () => {
             key: "photos",
             object: "file",
             contentType: "img",
-            uri: "testuri"
+            uri: "testuri",
           },
         ],
         schemas: ["schema"],
@@ -152,7 +151,6 @@ test("CreateDocument example", async () => {
         multiple: false,
       },
       photos: {
-        types: ["image/png"],
         object: "file",
         multiple: true,
       },
@@ -226,7 +224,6 @@ test("CreateDocument missing element", async () => {
         multiple: false,
       },
       photos: {
-        types: ["image/png"],
         object: "file",
         multiple: true,
       },
@@ -273,7 +270,7 @@ test("CreateDocument missing element", async () => {
             key: "title",
             object: "string",
             value: "hello world",
-          }
+          },
         ],
         schemas: ["schema"],
       },
@@ -292,7 +289,7 @@ test("CreateDocument duplicate element", async () => {
       title: {
         object: "string",
         multiple: false,
-      }
+      },
     },
   };
 
@@ -341,7 +338,7 @@ test("CreateDocument duplicate element", async () => {
             key: "title",
             object: "string",
             value: "hello worlds",
-          }
+          },
         ],
         schemas: ["schema"],
       },
@@ -362,7 +359,6 @@ test("Multiple example", async () => {
         multiple: false,
       },
       photos: {
-        types: ["image/png"],
         object: "file",
         multiple: true,
       },

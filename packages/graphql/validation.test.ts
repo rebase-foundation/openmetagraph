@@ -7,7 +7,7 @@ test("valid schema", () => {
     version: "0.1.0",
     elements: {
       title: { object: "string", multiple: false },
-      photos: { object: "file", types: ["image/png"], multiple: true },
+      photos: { object: "file", multiple: true },
       reference: {
         object: "node",
         schemas: ["ipfs://QmNaSWxyxx6rdpAr7KXXrJP8ehwXDVxUPp1q2sbkybgNz4"],

@@ -31,7 +31,6 @@ export interface OpenMetaGraphSchema {
       | {
           object: "file";
           multiple: boolean;
-          types: string[];
         }
       | {
           object: "string";

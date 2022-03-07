@@ -59,9 +59,6 @@ export const FileSchemaInput = new GraphQLInputObjectType({
     key: {
       type: GraphQLString,
     },
-    types: {
-      type: new GraphQLList(GraphQLString),
-    },
     multiple: {
       type: GraphQLBoolean,
     },
