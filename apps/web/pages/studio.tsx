@@ -217,14 +217,16 @@ export default function Web(props) {
 
   function onNewElment() {
     setSchema((s) => {
-      return [...s, next as any];
+      return [...s, next as any].sort((a, b) => a.key.localeCompare(b.key));
     });
 
     setNext({
       object: "string",
     });
 
-    postSchema([...schema, next as any]).then((key) => {
+    postSchema(
+      [...schema, next as any].sort((a, b) => a.key.localeCompare(b.key))
+    ).then((key) => {
       if (!key) return;
       router.push("?schema=" + key.replace("ipfs://", ""));
     });
