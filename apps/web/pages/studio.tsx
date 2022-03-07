@@ -278,7 +278,13 @@ export default function Web(props) {
           </div>
         </div>
 
-        <div className="px-2 py-1 border-b flex justify-between text-sm bg-gray-100 text-gray-400">
+        <div
+          className={cn({
+            "px-2 py-1 border-b flex justify-between text-sm bg-gray-100 text-gray-400":
+              true,
+            hidden: elements.length === 0,
+          })}
+        >
           <div>Schema</div>
         </div>
 
