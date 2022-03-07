@@ -242,11 +242,14 @@ export default function Web(props) {
     <div className="bg-gray-50 flex w-full">
       <div className="flex flex-col bg-white w-full h-full max-w-6xl mx-auto border-l border-r">
         <div className="px-2 py-4 border-b items-center flex justify-between text-sm  text-gray-400">
-          <div className="mr-4">OpenMetaGraph Studio</div>
+          <h1 className="mr-4 text-sm font-normal p-0">OpenMetaGraph Studio</h1>
           <div
             placeholder="ipfs://..."
             onChange={() => {}}
-            className="bg-gray-50  flex items-center"
+            className={cn({
+              "bg-gray-50  flex items-center": true,
+              hidden: !router.query.schema,
+            })}
           >
             <div className="py-2 px-2">
               {(router.query.schema as any) || "..."}
