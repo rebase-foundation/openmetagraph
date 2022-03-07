@@ -340,7 +340,7 @@ export default function Web(props) {
                 // Is file, but no types
                 (next.key === "file" && !(next as FileSchemaElement).types) ||
                 // Is node, but no schema
-                (next.key === "node" && !(next as NodeSchemaElement).schema) ||
+                (next.key === "node" && !(next as NodeSchemaElement).schemas) ||
                 // Is anything, but no keys
                 !next.key ||
                 next.key.length === 0
