@@ -255,8 +255,8 @@ export default function Web(props) {
     <div className="bg-gray-50 flex w-full">
       <Head>
         <title>
-          {router.query?.schema
-            ? router.query.schema + " OpenMetaGraph Schema"
+          {name
+            ? name + " OpenMetaGraph Schema"
             : "OpenMetaGraph Schema Creator"}
         </title>
         <meta name="keywords" content={schema.map((s) => s.key).join(",")} />

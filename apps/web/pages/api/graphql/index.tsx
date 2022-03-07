@@ -56,7 +56,6 @@ export default async function handler(
     schemas = [schemas];
   }
   schemas.push(...readSchemasFromQuery(req));
-  console.log("schemas", req.query);
   schemas = schemas.map((s) => s.replace("ipfs://", ""));
 
   const ipfs = IPFS.create("https://ipfs.rebasefoundation.org/api/v0" as any);
