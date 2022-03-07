@@ -206,6 +206,10 @@ export default function Web(props) {
 
   const router = useRouter();
 
+  function clear() {
+    router.push("/studio");
+  }
+
   function onNewElement() {
     setSchema((s) => {
       return [...s, next as any].sort((a, b) => a.key.localeCompare(b.key));
@@ -247,17 +251,13 @@ export default function Web(props) {
               {(router.query.schema as any) || "..."}
             </div>
             <a
-              className="border-l py-2 pl-2 px-2 hover:bg-gray-200"
-              href={
-                router.query.schema
-                  ? `/studio?schema=${router.query.schema}`
-                  : "/"
-              }
+              className="border-l flex items-center py-2 pl-2 px-2 hover:bg-gray-200"
+              href={`https://ipfs.io/ipfs/${router.query.schema}`}
               target="_blank"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
+                className="h-4 w-4 mr-1"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -269,6 +269,15 @@ export default function Web(props) {
                   d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
                 />
               </svg>
+              ipfs
+            </a>
+
+            <a
+              className="border-l px-2 py-2 hover:bg-blue-400 hover:text-white"
+              href="/studio"
+              target={"_blank"}
+            >
+              new
             </a>
           </div>
         </div>
