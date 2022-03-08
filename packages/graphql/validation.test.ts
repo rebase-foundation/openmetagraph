@@ -1,10 +1,15 @@
+import { OpenMetaGraphAlias, OpenMetaGraphSchema } from "openmetagraph";
 import { assert } from "superstruct";
-import { ValidOpenMetaGraphSchema } from "./validation";
+import {
+  ValidOpenMetaGraphSchema,
+  ValidOpenMetaGraphSchemaOrAlias,
+} from "./validation";
 
 test("valid schema", () => {
   const reasonableSchema = {
     object: "schema",
     version: "0.1.0",
+    name: "name",
     elements: {
       title: { object: "string", multiple: false },
       photos: { object: "file", multiple: true },
@@ -20,9 +25,18 @@ test("valid schema", () => {
 });
 
 test("bad schema", () => {
-  const reasonableSchema = {
+  const unreasonableSchema = {
+    object: "schema",
+  };
+
+  expect(() => assert(unreasonableSchema, ValidOpenMetaGraphSchema)).toThrow();
+});
+
+test("good schema or alias", () => {
+  const reasonableSchema: OpenMetaGraphSchema = {
     object: "schema",
     version: "0.1.0",
+    name: "name",
     elements: {
       title: { object: "string", multiple: false },
       photos: { object: "file", multiple: true },
@@ -34,5 +48,13 @@ test("bad schema", () => {
     },
   };
 
-  expect(() => assert(reasonableSchema, ValidOpenMetaGraphSchema)).toThrow();
+  const reasonableAlias: OpenMetaGraphAlias = {
+    object: "alias",
+    version: "0.1.0",
+    name: "name",
+    schemas: ["okay", "cool"],
+  };
+
+  assert(reasonableSchema, ValidOpenMetaGraphSchemaOrAlias);
+  assert(reasonableAlias, ValidOpenMetaGraphSchemaOrAlias);
 });

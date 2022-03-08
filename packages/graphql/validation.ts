@@ -17,7 +17,9 @@ export const assertOrThrow = (value: any, struct: any) => {
   try {
     assert(value, struct);
   } catch (err: any) {
-    throw new GraphQLError(err);
+    throw new GraphQLError(
+      `${err.message}\nvalue is: ${JSON.stringify(value, null, 2)}`
+    );
   }
 };
 
@@ -91,9 +93,11 @@ export const ValidOpenMetaGraphSchema = object({
 export const ValidOpenMetaGraphAlias = object({
   object: pattern(string(), /alias/),
   version: string(),
+  name: string(),
   schemas: array(string()),
 });
 
-export const ValidOpenMetaGraphSchemaOrAlias = object({
-  object: union([ValidOpenMetaGraphAlias, ValidOpenMetaGraphSchema]),
-});
+export const ValidOpenMetaGraphSchemaOrAlias = union([
+  ValidOpenMetaGraphAlias,
+  ValidOpenMetaGraphSchema,
+]);

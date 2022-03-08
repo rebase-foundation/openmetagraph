@@ -26,25 +26,35 @@ import { FileType } from "./fields";
 import { Hooks } from "./types";
 import getAllSchemas from "./getAllSchemas";
 
+function capitalizeFirstLetter(string: string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 async function createTypeName(hooks: Hooks, keys: string[]): Promise<string> {
   let aliasOrSchemas = await Promise.all(
     keys.map(async (k) => {
       const schemaOrResource = await hooks.onGetResource(k);
-      assertOrThrow(k, ValidOpenMetaGraphSchemaOrAlias);
+      assertOrThrow(schemaOrResource, ValidOpenMetaGraphSchemaOrAlias);
       return schemaOrResource;
     })
   );
 
-  return aliasOrSchemas
-    .map((s) =>
-      (s as OpenMetaGraphSchema | OpenMetaGraphAlias).name.toLocaleUpperCase()
-    )
-    .join("");
+  return (
+    "Node" +
+    aliasOrSchemas
+      .map((s) =>
+        capitalizeFirstLetter(
+          (s as OpenMetaGraphSchema | OpenMetaGraphAlias).name
+        )
+      )
+      .join("")
+  );
 }
 
 async function buildGraphqlSchemaFields(
   hooks: Hooks,
-  omgSchema: OpenMetaGraphSchema
+  omgSchema: OpenMetaGraphSchema,
+  nodeTypes: { [key: string]: GraphQLObjectType }
 ) {
   let fields: GraphQLObjectTypeConfig<any, any>["fields"] = {};
 
@@ -76,14 +86,22 @@ async function buildGraphqlSchemaFields(
         innerFields = Object.assign(
           {},
           innerFields,
-          await buildGraphqlSchemaFields(hooks, schema)
+          await buildGraphqlSchemaFields(hooks, schema, nodeTypes)
         );
       }
 
-      let obj = new GraphQLObjectType({
-        name: "Node" + (await createTypeName(hooks, el.schemas)),
-        fields: innerFields,
-      });
+      let name = await createTypeName(hooks, el.schemas);
+      let obj;
+      if (nodeTypes[name]) {
+        obj = nodeTypes[name];
+      } else {
+        obj = new GraphQLObjectType({
+          name: name,
+          fields: innerFields,
+        });
+        nodeTypes[name] = obj;
+      }
+
       if (el.multiple) {
         type = new GraphQLList(obj);
       } else {
@@ -152,19 +170,22 @@ async function buildGraphqlSchemaFields(
 }
 
 export async function buildQuery(hooks: Hooks, omgSchemas: string[]) {
+  const nodeTypes = {} as any;
   let innerFields = {};
   for (let schema of await getAllSchemas(hooks, omgSchemas)) {
     innerFields = Object.assign(
       {},
       innerFields,
-      await buildGraphqlSchemaFields(hooks, schema)
+      await buildGraphqlSchemaFields(hooks, schema, nodeTypes)
     );
   }
 
+  const name = await createTypeName(hooks, omgSchemas);
   const NodeType = new GraphQLObjectType({
-    name: "Node_" + (await createTypeName(hooks, omgSchemas)),
+    name: await createTypeName(hooks, omgSchemas),
     fields: innerFields,
   });
+  nodeTypes[name] = NodeType;
 
   const queryWithSchema = {
     query: new GraphQLObjectType({

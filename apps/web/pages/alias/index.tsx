@@ -6,7 +6,7 @@ import { OpenMetaGraphAlias } from "openmetagraph";
 import cn from "classnames";
 import { useState } from "react";
 
-export default function Alias(props: { alias: OpenMetaGraphAlias }) {
+export default function Alias() {
   const [nameInput, setNameInput] = useState("");
   const [schemasInput, setSchemasInput] = useState("");
   const router = useRouter();

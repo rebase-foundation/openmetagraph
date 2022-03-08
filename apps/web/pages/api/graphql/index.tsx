@@ -106,7 +106,6 @@ export default async function handler(
         };
       },
       onPostAlias: async (doc) => {
-        console.log("post alias", doc);
         const result = await ipfs.add(JSON.stringify(doc));
         return {
           key: "ipfs://" + result.cid.toString(),

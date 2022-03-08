@@ -1,6 +1,57 @@
 import { graphql } from "graphql";
-import { OpenMetaGraph, OpenMetaGraphSchema } from "openmetagraph";
+import {
+  OpenMetaGraph,
+  OpenMetaGraphAlias,
+  OpenMetaGraphSchema,
+} from "openmetagraph";
 import { buildGraphqlSchema } from "./index";
+import { Hooks } from "./types";
+import axios from "axios";
+import * as IPFS from "ipfs-http-client";
+
+test("Real example", async () => {
+  const ipfs = IPFS.create("https://ipfs.rebasefoundation.org/api/v0" as any);
+
+  let cache = {} as any;
+
+  const fetcher = async (uri: string): Promise<any> => {
+    const cid = uri.replace("ipfs://", uri);
+    if (cache[cid]) return cache[cid];
+
+    const result = await axios.post(
+      "https://ipfs.rebasefoundation.org/api/v0/cat?arg=" + cid
+    );
+
+    cache[cid] = result.data;
+    return result.data;
+  };
+
+  const hooks: Hooks = {
+    onGetResource: fetcher,
+    onPostDocument: async (doc) => {
+      const result = await ipfs.add(JSON.stringify(doc));
+      return {
+        key: "ipfs://" + result.cid.toString(),
+      };
+    },
+    onPostSchema: async (doc) => {
+      const result = await ipfs.add(JSON.stringify(doc));
+      return {
+        key: "ipfs://" + result.cid.toString(),
+      };
+    },
+    onPostAlias: async (doc) => {
+      const result = await ipfs.add(JSON.stringify(doc));
+      return {
+        key: "ipfs://" + result.cid.toString(),
+      };
+    },
+  };
+
+  const schema = await buildGraphqlSchema(hooks, [
+    "QmRcvWdCSQXdVdwLpsepqb8BAvfR9SJLDtk1LnrwjNnGvd",
+  ]);
+});
 
 test("Basic Example", async () => {
   const omgschema: OpenMetaGraphSchema = {
