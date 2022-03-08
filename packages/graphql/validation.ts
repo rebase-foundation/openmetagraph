@@ -87,3 +87,13 @@ export const ValidOpenMetaGraphSchema = object({
     ])
   ),
 });
+
+export const ValidOpenMetaGraphAlias = object({
+  object: pattern(string(), /alias/),
+  version: string(),
+  schemas: array(string()),
+});
+
+export const ValidOpenMetaGraphSchemaOrAlias = object({
+  object: union([ValidOpenMetaGraphAlias, ValidOpenMetaGraphSchema]),
+});

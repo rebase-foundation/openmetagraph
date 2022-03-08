@@ -43,6 +43,9 @@ test("Basic Example", async () => {
       onPostSchema: async () => {
         return { key: "key" } as any;
       },
+      onPostAlias: async () => {
+        return { key: "key" } as any;
+      },
     },
     ["schema"]
   );
@@ -102,6 +105,9 @@ test("CreateDocument example", async () => {
       },
       onPostSchema: async () => {
         return { key: "schema" } as any;
+      },
+      onPostAlias: async () => {
+        return { key: "key" } as any;
       },
     },
     ["schema"]
@@ -178,6 +184,9 @@ test("CreateDocument example", async () => {
         postCalled = true;
         return { key: "schema" } as any;
       },
+      onPostAlias: async () => {
+        return { key: "key" } as any;
+      },
     },
     ["schema"]
   );
@@ -252,7 +261,11 @@ test("CreateDocument missing element", async () => {
       onPostSchema: async () => {
         return { key: "schema" } as any;
       },
+      onPostAlias: async () => {
+        return { key: "key" } as any;
+      },
     },
+
     ["schema"]
   );
 
@@ -315,6 +328,9 @@ test("CreateDocument duplicate element", async () => {
       },
       onPostSchema: async () => {
         return { key: "schema" } as any;
+      },
+      onPostAlias: async () => {
+        return { key: "key" } as any;
       },
     },
     ["schema"]
@@ -409,6 +425,9 @@ test("Multiple example", async () => {
         return { key: "key" } as any;
       },
       onPostSchema: async () => {
+        return { key: "key" } as any;
+      },
+      onPostAlias: async () => {
         return { key: "key" } as any;
       },
     },
@@ -524,6 +543,9 @@ test("Resolving a node", async () => {
         return { key: "key" } as any;
       },
       onPostSchema: async () => {
+        return { key: "key" } as any;
+      },
+      onPostAlias: async () => {
         return { key: "key" } as any;
       },
     },

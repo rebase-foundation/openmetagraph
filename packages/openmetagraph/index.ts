@@ -51,6 +51,13 @@ export interface OpenMetaGraphSchema {
   };
 }
 
+export interface OpenMetaGraphAlias {
+  object: "alias";
+  name: "string";
+  version: "0.1.0";
+  schemas: string[];
+}
+
 export type OpenMetaGraphElement =
   | OpenMetaGraphStringElement
   | OpenMetaGraphNumberElement
@@ -66,7 +73,7 @@ export interface OpenMetaGraph {
 
 export type Fetcher = (
   key: string
-) => Promise<OpenMetaGraph | OpenMetaGraphSchema>;
+) => Promise<OpenMetaGraph | OpenMetaGraphSchema | OpenMetaGraphAlias>;
 
 interface Checker {
   asNode: () => Node;

@@ -4,7 +4,8 @@ import { pick, type } from "superstruct";
 import { assertOrThrow, ValidOpenMetaGraphDocument } from "./validation";
 import { CreateResponse, DocumentInputType } from "./fields";
 import { Hooks } from "./types";
-import { OpenMetaGraphSchema } from "openmetagraph";
+import { OpenMetaGraphAlias, OpenMetaGraphSchema } from "openmetagraph";
+import getAllSchemas from "./getAllSchemas";
 
 export function buildCreateDocument(hooks: Hooks) {
   return {
@@ -26,10 +27,9 @@ export function buildCreateDocument(hooks: Hooks) {
         object: "string" | "number" | "file" | "node";
         multiple: boolean;
       }[] = [];
-      for (const schemaCID of document.schemas) {
-        const schema = (await hooks.onGetResource(
-          schemaCID
-        )) as OpenMetaGraphSchema;
+
+      const schemas = await getAllSchemas(hooks, document.schemas);
+      for (const schema of schemas) {
         Object.keys(schema.elements).forEach((key: string) => {
           validSchemaElements.push({
             key: key,

@@ -102,6 +102,19 @@ export const SchemaInputType = new GraphQLInputObjectType({
   },
 });
 
+export const AliasInputType = new GraphQLInputObjectType({
+  name: "AliasInput",
+  description: "Input for creating an alias",
+  fields: {
+    schemas: {
+      type: new GraphQLList(GraphQLString),
+    },
+    name: {
+      type: GraphQLString,
+    },
+  },
+});
+
 const ObjectType = new GraphQLScalarType({
   name: "ObjectType",
   serialize: (value) => value,

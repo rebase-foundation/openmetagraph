@@ -1,6 +1,7 @@
 import {
   Fetcher,
   OpenMetaGraph,
+  OpenMetaGraphAlias,
   OpenMetaGraphFileElement,
   OpenMetaGraphNodeElement,
   OpenMetaGraphSchema,
@@ -15,27 +16,35 @@ import {
   GraphQLList,
   GraphQLError,
 } from "graphql";
-import crypto from "crypto";
 import { GraphQLJSONObject } from "graphql-type-json";
 import {
   assertOrThrow,
   ValidOpenMetaGraphDocument,
-  ValidOpenMetaGraphSchema,
+  ValidOpenMetaGraphSchemaOrAlias,
 } from "./validation";
 import { FileType } from "./fields";
 import { Hooks } from "./types";
+import getAllSchemas from "./getAllSchemas";
 
-function createTypeName(schemas: string[]) {
-  const hash = crypto.createHash("md5");
-  for (let schema of schemas) {
-    hash.update(schema);
-  }
-  return hash.digest("hex");
+async function createTypeName(hooks: Hooks, keys: string[]): Promise<string> {
+  let aliasOrSchemas = await Promise.all(
+    keys.map(async (k) => {
+      const schemaOrResource = await hooks.onGetResource(k);
+      assertOrThrow(k, ValidOpenMetaGraphSchemaOrAlias);
+      return schemaOrResource;
+    })
+  );
+
+  return aliasOrSchemas
+    .map((s) =>
+      (s as OpenMetaGraphSchema | OpenMetaGraphAlias).name.toLocaleUpperCase()
+    )
+    .join("");
 }
 
 async function buildGraphqlSchemaFields(
-  omgSchema: OpenMetaGraphSchema,
-  fetcher: Fetcher
+  hooks: Hooks,
+  omgSchema: OpenMetaGraphSchema
 ) {
   let fields: GraphQLObjectTypeConfig<any, any>["fields"] = {};
 
@@ -62,18 +71,17 @@ async function buildGraphqlSchemaFields(
       }
     } else if (el.object === "node") {
       let innerFields = {};
-      for (let schema of el.schemas) {
-        const result = await fetcher(schema);
-        assertOrThrow(result, ValidOpenMetaGraphSchema);
+      let schemas = await getAllSchemas(hooks, el.schemas);
+      for (let schema of schemas) {
         innerFields = Object.assign(
           {},
           innerFields,
-          await buildGraphqlSchemaFields(result as OpenMetaGraphSchema, fetcher)
+          await buildGraphqlSchemaFields(hooks, schema)
         );
       }
 
       let obj = new GraphQLObjectType({
-        name: "Node_" + createTypeName(el.schemas),
+        name: "Node" + (await createTypeName(hooks, el.schemas)),
         fields: innerFields,
       });
       if (el.multiple) {
@@ -122,7 +130,7 @@ async function buildGraphqlSchemaFields(
         }
 
         async function resolveNode(result: OpenMetaGraphNodeElement) {
-          const doc = await fetcher(result.uri);
+          const doc = await hooks.onGetResource(result.uri);
           assertOrThrow(doc, ValidOpenMetaGraphDocument);
           return doc as OpenMetaGraph;
         }
@@ -145,25 +153,16 @@ async function buildGraphqlSchemaFields(
 
 export async function buildQuery(hooks: Hooks, omgSchemas: string[]) {
   let innerFields = {};
-  for (let schema of omgSchemas) {
-    try {
-      const result = await hooks.onGetResource(schema);
-      assertOrThrow(result, ValidOpenMetaGraphSchema);
-      innerFields = Object.assign(
-        {},
-        innerFields,
-        await buildGraphqlSchemaFields(
-          result as OpenMetaGraphSchema,
-          hooks.onGetResource
-        )
-      );
-    } catch (err) {
-      throw new Error(`Schema ${schema} is missing or invalid.\n\n${err}`);
-    }
+  for (let schema of await getAllSchemas(hooks, omgSchemas)) {
+    innerFields = Object.assign(
+      {},
+      innerFields,
+      await buildGraphqlSchemaFields(hooks, schema)
+    );
   }
 
   const NodeType = new GraphQLObjectType({
-    name: "Node_" + createTypeName(omgSchemas),
+    name: "Node_" + (await createTypeName(hooks, omgSchemas)),
     fields: innerFields,
   });
 
@@ -200,7 +199,7 @@ export async function buildQuery(hooks: Hooks, omgSchemas: string[]) {
             },
           },
           resolve: async (src, { key }, ctx) => {
-            throw new Error("Schema is required");
+            throw new Error("Schema is required"); // todo
             const result = await hooks.onGetResource(key);
             assertOrThrow(result, ValidOpenMetaGraphDocument);
             return result;

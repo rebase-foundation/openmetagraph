@@ -105,6 +105,12 @@ export default async function handler(
           key: "ipfs://" + result.cid.toString(),
         };
       },
+      onPostAlias: async (doc) => {
+        const result = await ipfs.add(JSON.stringify(doc));
+        return {
+          key: "ipfs://" + result.cid.toString(),
+        };
+      },
     },
     schemas as string[]
   );
