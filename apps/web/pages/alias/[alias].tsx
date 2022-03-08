@@ -2,9 +2,17 @@ import request, { gql } from "graphql-request";
 import { NextPageContext } from "next";
 import Head from "next/head";
 import { useRouter } from "next/router";
-import { OpenMetaGraphAlias } from "openmetagraph";
+import { OpenMetaGraphAlias, OpenMetaGraphSchema } from "openmetagraph";
 import cn from "classnames";
 import { useState } from "react";
+import { useSWR } from "../../lib/useSWR";
+import SchemaLayout from "../../components/SchemaLayout";
+
+function Schema({ schema }: { schema: string }) {
+  const data = useSWR<OpenMetaGraphSchema>("/api/ipfs/" + schema);
+
+  return <SchemaLayout schema={data.data} cid={schema} />;
+}
 
 export default function Alias(props: { alias: OpenMetaGraphAlias }) {
   const [nameInput, setNameInput] = useState("");
@@ -83,28 +91,7 @@ export default function Alias(props: { alias: OpenMetaGraphAlias }) {
               </div>
 
               {props.alias?.schemas?.map((schema) => (
-                <div
-                  key={"alias" + schema}
-                  className="px-2 justify-between items-center font-mono flex w-full  py-2 border-b text-sm"
-                >
-                  <div>{schema}</div>
-                  <a className="underline" href={`/schemas?schema=${schema}`}>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                      />
-                    </svg>{" "}
-                  </a>
-                </div>
+                <Schema key={schema} schema={schema} />
               ))}
             </div>
           </div>
