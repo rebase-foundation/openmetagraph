@@ -13,10 +13,16 @@ export default function Layout(props: { children: any }) {
 
           <div className="flex gap-1 items-center">
             <a
-              href="/studio"
+              href="/schemas"
               className=" underline text-sm px-2 flex justify-between items-center p-1 rounded-sm hover:opacity-50 cursor-pointer"
             >
-              studio
+              schema
+            </a>
+            <a
+              href="/alias"
+              className=" underline text-sm px-2 flex justify-between items-center p-1 rounded-sm hover:opacity-50 cursor-pointer"
+            >
+              alias
             </a>
             <a
               target={"_blank"}

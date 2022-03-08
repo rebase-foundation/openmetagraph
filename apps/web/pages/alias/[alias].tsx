@@ -15,8 +15,6 @@ function Schema({ schema }: { schema: string }) {
 }
 
 export default function Alias(props: { alias: OpenMetaGraphAlias }) {
-  const [nameInput, setNameInput] = useState("");
-  const [schemasInput, setSchemasInput] = useState("");
   const router = useRouter();
 
   return (
