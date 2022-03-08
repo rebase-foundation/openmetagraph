@@ -188,7 +188,7 @@ export default function Web(props) {
             {el.schemas.map((s) => (
               <a
                 key={el.key + s}
-                href={`/studio?schema=${s}`}
+                href={`/schemas?schema=${s}`}
                 target="_blank"
                 className="bg-gray-50 underline hover:opacity-50 flex flex-1 items-center px-2 "
               >
@@ -263,7 +263,9 @@ export default function Web(props) {
       </Head>
       <div className="flex flex-col bg-white w-full h-full max-w-6xl mx-auto border-l border-r">
         <div className="px-2 py-4 border-b md:items-center flex flex-col md:flex-row md:justify-between text-sm  text-gray-400">
-          <h1 className="mr-4 text-sm font-normal p-0">OpenMetaGraph Studio</h1>
+          <h1 className="mr-4 text-sm font-normal p-0">
+            OpenMetaGraph Schemas
+          </h1>
           <div
             placeholder="ipfs://..."
             onChange={() => {}}
@@ -299,7 +301,7 @@ export default function Web(props) {
 
             <a
               className="border-l px-2 py-2 hover:bg-blue-400 hover:text-white"
-              href="/studio"
+              href="/schemas"
               target={"_blank"}
             >
               new
