@@ -9,12 +9,16 @@ export function buildCreateAlias(hooks: Hooks) {
         type: AliasInputType,
       },
     },
-    resolve: async (_: any, args: any, __: any) => {
+    resolve: async (
+      _: any,
+      args: { alias: { name: string; schemas: string[] } },
+      __: any
+    ) => {
       return await hooks.onPostAlias({
         object: "alias",
-        name: args.name,
+        name: args.alias.name,
         version: "0.1.0",
-        schemas: args.schemas,
+        schemas: args.alias.schemas,
       });
     },
   };

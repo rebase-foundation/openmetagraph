@@ -330,12 +330,14 @@ export default function Web(props) {
           </button>
         </div>
 
-        <div className="flex border-b bg-gray-50 p-2">
-          <div className=" flex flex-1 items-start h-full flex-col font-mono">
-            <div className="text-xs text-gray-400 pt-1 ">Name</div>
-            {name}
+        {name && (
+          <div className="flex border-b bg-gray-50 p-2">
+            <div className=" flex flex-1 items-start h-full flex-col font-mono">
+              <div className="text-xs text-gray-400 pt-1 ">Name</div>
+              {name}
+            </div>
           </div>
-        </div>
+        )}
 
         {!name && (
           <div className="flex flex-col border-b">

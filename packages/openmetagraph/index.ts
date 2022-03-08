@@ -53,7 +53,7 @@ export interface OpenMetaGraphSchema {
 
 export interface OpenMetaGraphAlias {
   object: "alias";
-  name: "string";
+  name: string;
   version: "0.1.0";
   schemas: string[];
 }
