@@ -8,7 +8,7 @@ import {
   GraphQLObjectTypeConfig,
   GraphQLString,
 } from "graphql";
-import { CreateResponse, DocumentInputType, FileInputType } from "./fields";
+import { CreateResponse, FileInputType } from "./fields";
 import { Hooks } from "./types";
 import { OpenMetaGraphAlias, OpenMetaGraphSchema } from "openmetagraph";
 import getAllSchemas from "./getAllSchemas";
@@ -102,7 +102,7 @@ export async function buildCreateDocument(
   }
 
   const InputDocumentType = new GraphQLInputObjectType({
-    name: "DocumentInput",
+    name: "CreateDocumentInput",
     fields: innerFields,
   });
 

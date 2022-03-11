@@ -145,19 +145,6 @@ const ObjectType = new GraphQLScalarType({
   },
 });
 
-export const DocumentInputType = new GraphQLInputObjectType({
-  name: "DocumentInput",
-  description: "Input for creating a document",
-  fields: {
-    elements: {
-      type: new GraphQLList(ObjectType),
-    },
-    schemas: {
-      type: new GraphQLList(GraphQLString),
-    },
-  },
-});
-
 export const CreateResponse = new GraphQLObjectType({
   name: "CreateResponse",
   fields: {
