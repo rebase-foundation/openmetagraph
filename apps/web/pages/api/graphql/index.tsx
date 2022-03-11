@@ -6,6 +6,18 @@ import { execute, GraphQLError, parse, Source } from "graphql";
 import { buildGraphqlSchema } from "openmetagraph-graphql";
 import fetch from "node-fetch";
 import * as IPFS from "ipfs-http-client";
+import { Web3Storage, File } from "web3.storage";
+
+export async function saveJson(obj: any) {
+  const web3Client = new Web3Storage({
+    token: "proxy_replaces",
+    endpoint: new URL("https://web3proxy.fly.dev/api/web3/"),
+  });
+  const file = new File([JSON.stringify(obj)], "metadata.json", {
+    type: "application/json",
+  });
+  return await web3Client.put([file], { wrapWithDirectory: false });
+}
 
 function readSchemasFromQuery(req: NextApiRequest) {
   const schemas = req.query.schema;
@@ -90,12 +102,10 @@ export default async function handler(
     {
       onGetResource: fetcher,
       onPostDocument: async (doc) => {
-        const result = await ipfs.add(JSON.stringify(doc), {
-          timeout: 15000,
-        });
+        const cid = await saveJson(doc);
 
         return {
-          key: "ipfs://" + result.cid.toString(),
+          key: "ipfs://" + cid.toString(),
         };
       },
       onPostSchema: async (doc) => {
@@ -103,19 +113,16 @@ export default async function handler(
         // IPFS CID hash the same.
         doc.elements = JSON.parse(JSON.stringify(sortObject(doc.elements)));
 
-        const result = await ipfs.add(JSON.stringify(doc), {
-          timeout: 15000,
-        });
+        const cid = await saveJson(doc);
+
         return {
-          key: "ipfs://" + result.cid.toString(),
+          key: "ipfs://" + cid.toString(),
         };
       },
       onPostAlias: async (doc) => {
-        const result = await ipfs.add(JSON.stringify(doc), {
-          timeout: 15000,
-        });
+        const cid = await saveJson(doc);
         return {
-          key: "ipfs://" + result.cid.toString(),
+          key: "ipfs://" + cid.toString(),
         };
       },
     },
