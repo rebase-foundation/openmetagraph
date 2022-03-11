@@ -90,7 +90,9 @@ export default async function handler(
     {
       onGetResource: fetcher,
       onPostDocument: async (doc) => {
-        const result = await ipfs.add(JSON.stringify(doc));
+        const result = await ipfs.add(JSON.stringify(doc), {
+          timeout: 15000,
+        });
 
         return {
           key: "ipfs://" + result.cid.toString(),
@@ -101,13 +103,17 @@ export default async function handler(
         // IPFS CID hash the same.
         doc.elements = JSON.parse(JSON.stringify(sortObject(doc.elements)));
 
-        const result = await ipfs.add(JSON.stringify(doc));
+        const result = await ipfs.add(JSON.stringify(doc), {
+          timeout: 15000,
+        });
         return {
           key: "ipfs://" + result.cid.toString(),
         };
       },
       onPostAlias: async (doc) => {
-        const result = await ipfs.add(JSON.stringify(doc));
+        const result = await ipfs.add(JSON.stringify(doc), {
+          timeout: 15000,
+        });
         return {
           key: "ipfs://" + result.cid.toString(),
         };
