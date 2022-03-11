@@ -7,6 +7,7 @@ import { buildGraphqlSchema } from "openmetagraph-graphql";
 import fetch from "node-fetch";
 import * as IPFS from "ipfs-http-client";
 import { Web3Storage, File } from "web3.storage";
+import NodeCache from "node-cache";
 
 export async function saveJson(obj: any) {
   const web3Client = new Web3Storage({
@@ -52,6 +53,11 @@ const cors = initMiddleware(
   })
 );
 
+const cache = new NodeCache({
+  maxKeys: 1000,
+  stdTTL: 60 * 60 * 24 * 30, // 30 days
+});
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -70,12 +76,13 @@ export default async function handler(
   schemas.push(...readSchemasFromQuery(req));
   schemas = schemas.map((s) => s.replace("ipfs://", ""));
 
-  const ipfs = IPFS.create("https://ipfs.rebasefoundation.org/api/v0" as any);
-
   async function fetcher(
     key: string
   ): Promise<OpenMetaGraph | OpenMetaGraphSchema> {
     let k = key.replace("ipfs://", "");
+    if (cache.has(k)) {
+      return cache.get(k);
+    }
 
     let url = "https://ipfs.rebasefoundation.org/api/v0/cat?arg=" + k;
     const result = await fetch(url, {
@@ -90,6 +97,7 @@ export default async function handler(
     }
 
     const json = await result.json();
+    cache.set(k, json);
     return json as any;
   }
 
