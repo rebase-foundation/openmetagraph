@@ -8,7 +8,7 @@ import { buildCreateAlias } from "./buildCreateAlias";
 // Generates a graphql schema for open meta graph
 export async function buildGraphqlSchema(hooks: Hooks, omgSchemas: string[]) {
   const query = await buildQuery(hooks, omgSchemas);
-  const createDocument = buildCreateDocument(hooks);
+  const createDocument = await buildCreateDocument(hooks, omgSchemas);
   const createSchema = buildCreateSchema(hooks);
   const createAlias = buildCreateAlias(hooks);
 

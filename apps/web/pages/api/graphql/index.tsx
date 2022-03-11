@@ -91,6 +91,7 @@ export default async function handler(
       onGetResource: fetcher,
       onPostDocument: async (doc) => {
         const result = await ipfs.add(JSON.stringify(doc));
+
         return {
           key: "ipfs://" + result.cid.toString(),
         };

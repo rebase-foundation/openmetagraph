@@ -177,30 +177,27 @@ test("CreateDocument example", async () => {
     source: query,
     variableValues: {
       input: {
-        elements: [
+        title: "hello world",
+        photos: [
           {
-            key: "title",
-            object: "string",
-            value: "hello world",
+            contentType: "image/jpeg",
+            uri: "ipfs://cid",
           },
           {
-            key: "photos",
-            object: "file",
-            contentType: "img",
-            uri: "testuri",
+            contentType: "image/jpeg",
+            uri: "ipfs://cid",
           },
         ],
-        schemas: ["schema"],
       },
     },
   });
 
-  expect((result.data as any).createDocument.key).toBe("doc");
   expect(result.errors).toBeFalsy();
+  expect((result.data as any).createDocument.key).toBe("doc");
   expect(postCalled).toBeTruthy();
 });
 
-test("CreateDocument example", async () => {
+test("CreateSchema example", async () => {
   const omgschema: OpenMetaGraphSchema = {
     object: "schema",
     version: "0.1.0",

@@ -1,6 +1,7 @@
 import { OpenMetaGraphAlias, OpenMetaGraphSchema } from "openmetagraph";
 import { assert } from "superstruct";
 import {
+  buildJSONValidatorFromSchemas,
   ValidOpenMetaGraphSchema,
   ValidOpenMetaGraphSchemaOrAlias,
 } from "./validation";
@@ -57,4 +58,63 @@ test("good schema or alias", () => {
 
   assert(reasonableSchema, ValidOpenMetaGraphSchemaOrAlias);
   assert(reasonableAlias, ValidOpenMetaGraphSchemaOrAlias);
+});
+
+test("buildJSONValidatorFromSchemas", async () => {
+  const omgschema: OpenMetaGraphSchema = {
+    object: "schema",
+    version: "0.1.0",
+    name: "schema",
+    elements: {
+      title: {
+        object: "string",
+        multiple: false,
+      },
+      photos: {
+        object: "file",
+        multiple: true,
+      },
+    },
+  };
+
+  const fetcher = async (uri: string): Promise<any> => {
+    if (uri == "schema") {
+      return omgschema;
+    }
+    throw new Error("Unexpected schema " + uri);
+  };
+
+  let postCalled = false;
+  const hooks = {
+    onGetResource: fetcher,
+    onPostDocument: async () => {
+      postCalled = true;
+      return { key: "doc" } as any;
+    },
+    onPostSchema: async () => {
+      return { key: "schema" } as any;
+    },
+    onPostAlias: async () => {
+      return { key: "key" } as any;
+    },
+  };
+
+  const validator = await buildJSONValidatorFromSchemas(hooks, ["schema"]);
+
+  assert(
+    {
+      title: "hello",
+      photos: [
+        {
+          contentType: "image/jpeg",
+          uri: "hello",
+        },
+        {
+          contentType: "image/jpeg",
+          uri: "hello",
+        },
+      ],
+    },
+    validator
+  );
 });

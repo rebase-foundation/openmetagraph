@@ -25,31 +25,7 @@ import {
 import { FileType } from "./fields";
 import { Hooks } from "./types";
 import getAllSchemas from "./getAllSchemas";
-
-function capitalizeFirstLetter(string: string) {
-  return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
-async function createTypeName(hooks: Hooks, keys: string[]): Promise<string> {
-  let aliasOrSchemas = await Promise.all(
-    keys.map(async (k) => {
-      const schemaOrResource = await hooks.onGetResource(k);
-      assertOrThrow(schemaOrResource, ValidOpenMetaGraphSchemaOrAlias);
-      return schemaOrResource;
-    })
-  );
-
-  return (
-    "Node" +
-    aliasOrSchemas
-      .map((s) =>
-        capitalizeFirstLetter(
-          (s as OpenMetaGraphSchema | OpenMetaGraphAlias).name
-        )
-      )
-      .join("")
-  );
-}
+import { createTypeName } from "./createTypeName";
 
 async function buildGraphqlSchemaFields(
   hooks: Hooks,
@@ -90,7 +66,7 @@ async function buildGraphqlSchemaFields(
         );
       }
 
-      let name = await createTypeName(hooks, el.schemas);
+      let name = await createTypeName(hooks, el.schemas, "Node");
       let obj;
       if (nodeTypes[name]) {
         obj = nodeTypes[name];
@@ -180,9 +156,9 @@ export async function buildQuery(hooks: Hooks, omgSchemas: string[]) {
     );
   }
 
-  const name = await createTypeName(hooks, omgSchemas);
+  const name = await createTypeName(hooks, omgSchemas, "Root");
   const NodeType = new GraphQLObjectType({
-    name: await createTypeName(hooks, omgSchemas),
+    name: name,
     fields: innerFields,
   });
   nodeTypes[name] = NodeType;
