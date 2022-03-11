@@ -1,4 +1,5 @@
 import { GraphQLError } from "graphql";
+import { OpenMetaGraphNodeElement, OpenMetaGraphSchema } from "openmetagraph";
 import {
   object,
   number,
@@ -11,7 +12,11 @@ import {
   boolean,
   assert,
   StructError,
+  Struct,
 } from "superstruct";
+import { ObjectSchema, ObjectType } from "superstruct/lib/utils";
+import getAllSchemas from "./getAllSchemas";
+import { Hooks } from "./types";
 
 export const assertOrThrow = (value: any, struct: any) => {
   try {
@@ -101,3 +106,52 @@ export const ValidOpenMetaGraphSchemaOrAlias = union([
   ValidOpenMetaGraphAlias,
   ValidOpenMetaGraphSchema,
 ]);
+
+// Builds a superstruct validator for schemas
+export async function buildJSONValidatorFromSchemas(
+  hooks: Hooks,
+  schemaStrings: string[]
+) {
+  const schemas = await getAllSchemas(hooks, schemaStrings);
+
+  let total = schemas.reduce((acc, schema) => {
+    acc.elements = Object.assign(acc.elements, schema.elements);
+    return { ...acc };
+  });
+
+  let inner: { [key: string]: Struct<any, any> } = {};
+  for (let key in total.elements) {
+    let el = total.elements[key];
+
+    if (el.object === "string") {
+      if (el.multiple) inner[key] = array(string());
+      else inner[key] = string();
+    } else if (el.object === "number") {
+      if (el.multiple) inner[key] = array(number());
+      else inner[key] = number();
+    } else if (el.object === "file") {
+      if (el.multiple) {
+        inner[key] = array(
+          object({
+            contentType: string(),
+            uri: string(),
+          })
+        );
+      } else {
+        inner[key] = object({
+          contentType: string(),
+          uri: string(),
+        });
+      }
+    } else if (el.object === "node") {
+      const validator = await buildJSONValidatorFromSchemas(hooks, el.schemas);
+      if (el.multiple) {
+        inner[key] = array(validator);
+      } else {
+        inner[key] = validator;
+      }
+    }
+  }
+
+  return object(inner);
+}

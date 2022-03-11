@@ -14,6 +14,21 @@ import {
 } from "graphql";
 import GraphQLJSON, { GraphQLJSONObject } from "graphql-type-json";
 
+export const FileInputType = new GraphQLInputObjectType({
+  name: "FileInput",
+  description: "A URI to a file somewhere else",
+  fields: {
+    contentType: {
+      type: GraphQLString,
+      description: "A mime type, like 'image/gif'",
+    },
+    uri: {
+      type: GraphQLString,
+      description: "A URI, like ipfs://mycid, or https://example.com/foo.gif",
+    },
+  },
+});
+
 export const FileType = new GraphQLObjectType({
   name: "File",
   description: "A URI to a file somewhere else",
