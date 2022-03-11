@@ -80,16 +80,6 @@ export async function jsonToOpenMetaGraph(
     // Handle files and arrays of files
     if (elSchema.object === "file") {
       if (elSchema.multiple) {
-        assertOrThrow(
-          value,
-          array(
-            object({
-              contentType: string(),
-              uri: string(),
-            })
-          )
-        );
-
         for (let v of value as Array<{ contentType: string; uri: string }>) {
           omg.elements.push({
             key,
@@ -113,14 +103,16 @@ export async function jsonToOpenMetaGraph(
     // Handle nodes and arrays of nodes
     if (elSchema.object === "node") {
       if (elSchema.multiple) {
-        const doc = await jsonToOpenMetaGraph(hooks, value, elSchema.schemas);
-        const { key: cid } = await hooks.onPostDocument(doc);
+        for (let v of value) {
+          const doc = await jsonToOpenMetaGraph(hooks, v, elSchema.schemas);
+          const { key: cid } = await hooks.onPostDocument(doc);
 
-        omg.elements.push({
-          key,
-          object: "node",
-          uri: cid,
-        });
+          omg.elements.push({
+            key,
+            object: "node",
+            uri: cid,
+          });
+        }
       } else {
         const doc = await jsonToOpenMetaGraph(hooks, value, elSchema.schemas);
         const { key: cid } = await hooks.onPostDocument(doc);

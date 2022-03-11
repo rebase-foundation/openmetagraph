@@ -51,6 +51,46 @@ test("Real example", async () => {
   const schema = await buildGraphqlSchema(hooks, [
     "QmRcvWdCSQXdVdwLpsepqb8BAvfR9SJLDtk1LnrwjNnGvd",
   ]);
+
+  const query = `
+  mutation createDocument($input:CreateDocumentInput) {
+    createDocument(doc: $input) {
+      key
+    }
+  }
+`;
+
+  const result = await graphql({
+    schema: schema,
+    source: query,
+    variableValues: {
+      input: {
+        name: "hi",
+        description: "description",
+        primaryImage: {
+          src: {
+            contentType: "contenttype",
+            uri: "uri",
+          },
+          height: 100,
+          width: 200,
+          alt: "alt",
+          type: "type",
+        },
+        createdAt: 0,
+        updatedAt: 0,
+        images: [],
+        links: [],
+        tags: [],
+        videos: [],
+        platforms: [],
+        creators: [],
+      },
+    },
+  });
+
+  expect(result.errors).toBeFalsy();
+  expect(result.data).toBeTruthy();
 });
 
 test("Basic Example", async () => {
@@ -165,7 +205,7 @@ test("CreateDocument example", async () => {
   );
 
   const query = `
-    mutation createDocument($input:DocumentInput) {
+    mutation createDocument($input:CreateDocumentInput) {
       createDocument(doc: $input) {
         key
       }
