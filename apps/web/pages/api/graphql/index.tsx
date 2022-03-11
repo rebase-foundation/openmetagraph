@@ -60,8 +60,6 @@ export default async function handler(
 
   const ipfs = IPFS.create("https://ipfs.rebasefoundation.org/api/v0" as any);
 
-  console.log("WHAT");
-
   async function fetcher(
     key: string
   ): Promise<OpenMetaGraph | OpenMetaGraphSchema> {
