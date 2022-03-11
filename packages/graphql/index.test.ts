@@ -252,6 +252,7 @@ test("CreateSchema example", async () => {
     source: query,
     variableValues: {
       mySchema: {
+        name: "name",
         files: [],
         strings: [
           {
@@ -269,8 +270,8 @@ test("CreateSchema example", async () => {
     },
   });
 
-  expect((result.data as any).createSchema.key).toBe("schema");
   expect(result.errors).toBeFalsy();
+  expect((result.data as any).createSchema.key).toBe("schema");
   expect(postCalled).toBeTruthy();
 });
 
