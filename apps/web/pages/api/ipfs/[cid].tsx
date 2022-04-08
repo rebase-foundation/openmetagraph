@@ -1,11 +1,6 @@
 import Cors from "cors";
 import { NextApiRequest, NextApiResponse } from "next";
-import { getGraphQLParams } from "express-graphql";
-import { OpenMetaGraph, OpenMetaGraphSchema } from "openmetagraph";
-import { execute, GraphQLError, parse, Source } from "graphql";
-import { buildGraphqlSchema } from "openmetagraph-graphql";
 import fetch from "node-fetch";
-import * as IPFS from "ipfs-http-client";
 
 // Helper method to wait for a middleware to execute before continuing
 // And to throw an error when an error happens in a middleware
@@ -37,21 +32,23 @@ export default async function handler(
   // Run cors
   await cors(req, res);
 
-  const ipfs = IPFS.create("https://ipfs.io/api/v0" as any);
-
   const cid = req.query.cid as string;
   if (Array.isArray(cid)) throw new Error("cid cannot be query param too");
 
   let k = cid.replace("ipfs://", "");
 
-  let url = "https://ipfs.io/api/v0/cat?arg=" + k;
+  const auth =
+    'Basic ' + Buffer.from(process.env.INFURA_PROJECT_ID + ':' + process.env.INFURA_PROJECT_SECRET).toString('base64');
+  let url = "https://ipfs.infura.io:5001/api/v0/cat?arg=" + k;
   const result = await fetch(url, {
     method: "POST",
+    headers: {
+      "Authorization": auth
+    }
   });
   if (result.status !== 200) {
     throw new Error(
-      `Unexpectedly failed to fetch '${url}' with status code ${
-        result.status
+      `Unexpectedly failed to fetch '${url}' with status code ${result.status
       } and body ${await result.text()}`
     );
   }

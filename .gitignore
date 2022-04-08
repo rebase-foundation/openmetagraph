@@ -33,3 +33,5 @@ yarn-error.log*
 .turbodist
 .turbo
 dist
+.vercel
+.env

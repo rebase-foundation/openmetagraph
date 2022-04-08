@@ -84,14 +84,18 @@ export default async function handler(
       return cache.get(k);
     }
 
-    let url = "https://ipfs.io/api/v0/cat?arg=" + k;
+    const auth =
+      'Basic ' + Buffer.from(process.env.INFURA_PROJECT_ID + ':' + process.env.INFURA_PROJECT_SECRET).toString('base64');
+    let url = "https://ipfs.infura.io:5001/api/v0/cat?arg=" + k;
     const result = await fetch(url, {
       method: "POST",
+      headers: {
+        "Authorization": auth
+      }
     });
     if (result.status !== 200) {
       throw new GraphQLError(
-        `Unexpectedly failed to fetch '${url}' with status code ${
-          result.status
+        `Unexpectedly failed to fetch '${url}' with status code ${result.status
         } and body ${await result.text()}`
       );
     }
