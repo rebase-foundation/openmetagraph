@@ -543,7 +543,7 @@ export async function getServerSideProps(ctx: NextPageContext) {
 
   let k = (ctx.query.schema as any).replace("ipfs://", "");
 
-  let url = "https://ipfs.rebasefoundation.org/api/v0/cat?arg=" + k;
+  let url = "https://ipfs.io/api/v0/cat?arg=" + k;
   const result = await fetch(url, {
     method: "POST",
   });

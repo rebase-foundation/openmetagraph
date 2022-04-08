@@ -10,7 +10,7 @@ import axios from "axios";
 import * as IPFS from "ipfs-http-client";
 
 test("Real example", async () => {
-  const ipfs = IPFS.create("https://ipfs.rebasefoundation.org/api/v0" as any);
+  const ipfs = IPFS.create("https://ipfs.io/api/v0" as any);
 
   let cache = {} as any;
 
@@ -19,7 +19,7 @@ test("Real example", async () => {
     if (cache[cid]) return cache[cid];
 
     const result = await axios.post(
-      "https://ipfs.rebasefoundation.org/api/v0/cat?arg=" + cid
+      "https://ipfs.io/api/v0/cat?arg=" + cid
     );
 
     cache[cid] = result.data;

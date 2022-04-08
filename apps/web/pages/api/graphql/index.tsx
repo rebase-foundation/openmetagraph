@@ -84,7 +84,7 @@ export default async function handler(
       return cache.get(k);
     }
 
-    let url = "https://ipfs.rebasefoundation.org/api/v0/cat?arg=" + k;
+    let url = "https://ipfs.io/api/v0/cat?arg=" + k;
     const result = await fetch(url, {
       method: "POST",
     });

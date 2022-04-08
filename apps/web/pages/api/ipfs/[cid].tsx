@@ -37,14 +37,14 @@ export default async function handler(
   // Run cors
   await cors(req, res);
 
-  const ipfs = IPFS.create("https://ipfs.rebasefoundation.org/api/v0" as any);
+  const ipfs = IPFS.create("https://ipfs.io/api/v0" as any);
 
   const cid = req.query.cid as string;
   if (Array.isArray(cid)) throw new Error("cid cannot be query param too");
 
   let k = cid.replace("ipfs://", "");
 
-  let url = "https://ipfs.rebasefoundation.org/api/v0/cat?arg=" + k;
+  let url = "https://ipfs.io/api/v0/cat?arg=" + k;
   const result = await fetch(url, {
     method: "POST",
   });
